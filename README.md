@@ -27,6 +27,34 @@ This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a c
 |--------------------|-----------------------------------------------------------------------------------------------------|
 | **Kobra**           | [![Kowabunga Release](https://img.shields.io/github/v/release/kowabunga-cloud/kobra)](https://github.com/kowabunga-cloud/kobra/releases) |
 
+## Managed Platform Configuration
+
+Kobra-managed platforms require a specific **kobra.yml** file to exist at the root of your platform. This YAML-formated file contains several important pieces of configuration, e.g:
+
+```yaml
+secrets:
+  provider: # aws, env, file, hcp, input
+  aws: # optional, aws-provider specific
+    region: string
+    role_arn: string
+    id: string
+  env: # optional, env-provider specific
+    var: string # optional, defaults to KOBRA_MASTER_KEY
+  file: # optional, file-provider specific
+    path: string
+  master_key_id: string
+```
+
+## Secrets Management
+
+Kobra supports different secrets management **providers**:
+
+- **aws**: AWS Secrets Manager
+- **env**: Environment variable stored master-key
+- **file**: plain text master-key file (not recommended for production)
+- **hcp**: Hashicorp Vault
+- **input**: interactive command-line input prompt for master-key
+
 ## License
 
 Licensed under [Apache License, Version 2.0](https://opensource.org/license/apache-2-0), see [`LICENSE`](LICENSE).
