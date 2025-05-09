@@ -9,6 +9,7 @@ package main
 import (
 	"os"
 
+	"github.com/kowabunga-cloud/kobra/kobra"
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
 
@@ -30,4 +31,7 @@ func main() {
 			Level:   logLevel,
 		},
 	})
+
+	// parsing commands
+	kobra.ParseCommands()
 }
