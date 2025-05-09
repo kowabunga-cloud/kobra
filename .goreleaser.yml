@@ -1,0 +1,20 @@
+---
+version: 2
+project_name: kobra
+
+builds:
+- main: ./cmd/kobra/main.go
+  binary: kobra
+  flags:
+    - -trimpath
+    - -v
+  gcflags:
+    - kobra/...=-e
+  ldflags:
+    - -X {{.Env.PKG_NAME}}.version={{.Env.VERSION}}
+  goos:
+    - darwin
+    - linux
+  goarch:
+    - amd64
+    - arm64
