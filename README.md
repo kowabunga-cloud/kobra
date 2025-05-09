@@ -20,6 +20,7 @@ This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a c
 [![time tracker](https://wakatime.com/badge/github/kowabunga-cloud/kobra.svg)](https://wakatime.com/badge/github/kowabunga-cloud/kobra)
 ![Code lines](https://sloc.xyz/github/kowabunga-cloud/kobra/?category=code)
 ![Comments](https://sloc.xyz/github/kowabunga-cloud/kobra/?category=comments)
+![COCOMO](https://sloc.xyz/github/kowabunga-cloud/kobra/?category=cocomo&avg-wage=100000)
 
 ## Current Releases
 
