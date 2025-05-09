@@ -95,6 +95,10 @@ vet: ; $(info $(M) running go vet…) @ ## Run go vet
 fmt: ; $(info $(M) running go fmt…) @ ## Run go fmt on all source files
 	$Q go fmt $(PKGS)
 
+.PHONY: tests
+tests: ; $(info $(M) running test suite…) @
+	$Q go test ./... -count=1 -coverprofile=coverage.txt
+
 # This target clean all the generated files
 .PHONY: clean
 clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
