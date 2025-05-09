@@ -14,6 +14,10 @@ import (
 	"github.com/spf13/cobra"
 )
 
+const (
+	cmdFailureStatus = "Something went terribly wrong, unable to run %s or execution came as error !"
+)
+
 var RootCmd = &cobra.Command{
 	Use:   "kobra",
 	Short: "Kobra - DevOps deployment swiss-army knife utility",
