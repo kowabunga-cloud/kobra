@@ -1,0 +1,33 @@
+name: release
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 1.24
+      - name: Get environment variables
+        run: |
+          echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+          echo "KOBRA_VERSION=$(grep '^VERSION Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          version: '~> v2'
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          PKG_NAME: ${{ KOBRA_PKG_NAME }}
+          VERSION: ${{ KOBRA_VERSION }}
