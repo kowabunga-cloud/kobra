@@ -10,6 +10,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 )
 
 type SecretProviderFile struct {
@@ -38,7 +39,7 @@ func (s *SecretProviderFile) Set(secret string) error {
 }
 
 func NewSecretProviderFile(ptfCfg *PlatformConfig) (*SecretProviderFile, error) {
-	f := ptfCfg.Secrets.File.Path
+	f := filepath.Clean(ptfCfg.Secrets.File.Path)
 	if f == "" {
 		return nil, fmt.Errorf("no file specified for secrets master key")
 	}
