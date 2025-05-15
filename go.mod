@@ -4,7 +4,7 @@ go 1.24.0
 
 require (
 	github.com/99designs/keyring v1.2.2
-	github.com/codeclysm/extract/v3 v3.1.1
+	github.com/codeclysm/extract/v4 v4.0.0
 	github.com/cqroot/prompt v0.9.4
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/kowabunga-cloud/kowabunga v0.0.0-20250508090239-61fdf82bb2ad
@@ -50,7 +50,7 @@ require (
 	github.com/rivo/uniseg v0.4.7 // indirect
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/spf13/pflag v1.0.6 // indirect
-	github.com/ulikunitz/xz v0.5.11 // indirect
+	github.com/ulikunitz/xz v0.5.12 // indirect
 	golang.org/x/sync v0.14.0 // indirect
 	golang.org/x/sys v0.33.0 // indirect
 	golang.org/x/term v0.6.0 // indirect

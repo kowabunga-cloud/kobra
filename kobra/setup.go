@@ -19,7 +19,7 @@ import (
 	"strings"
 	"syscall"
 
-	"github.com/codeclysm/extract/v3"
+	"github.com/codeclysm/extract/v4"
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
 
