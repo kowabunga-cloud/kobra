@@ -34,7 +34,7 @@ Kobra-managed platforms require a specific **kobra.yml** file to exist at the ro
 
 ```yaml
 secrets:
-  provider: # aws, env, file, hcp, input
+  provider: # aws, env, file, hcp, input, keyring
   aws: # optional, aws-provider specific
     region: string
     role_arn: string
@@ -43,6 +43,8 @@ secrets:
     var: string # optional, defaults to KOBRA_MASTER_KEY
   file: # optional, file-provider specific
     path: string
+  hcp: # optional, hcp-provider specific
+    endpoint: string # optional, default to "http://127.0.0.1:8200" if unspecified
   master_key_id: string
 ```
 
@@ -52,9 +54,12 @@ Kobra supports different secrets management **providers**:
 
 - **aws**: AWS Secrets Manager
 - **env**: Environment variable stored master-key
-- **file**: plain text master-key file (not recommended for production)
+- **file**: local plain text master-key file (not recommended for production)
 - **hcp**: Hashicorp Vault
 - **input**: interactive command-line input prompt for master-key
+- **keyring**: local OS keyring (macOS Keychain, Windows Credentials Manager, Linux Gnome Keyring/KWallet)
+
+**WARNING**: it is highly recommended not to use local secret management backends if secret is to be used by other contributors. When working as a team, always rely on distributed secret management backends.
 
 ## License
 

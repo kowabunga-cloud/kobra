@@ -9,6 +9,7 @@ package kobra
 import (
 	"fmt"
 
+	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 	"github.com/spf13/cobra"
 )
 
@@ -39,7 +40,13 @@ var secretsInitCmd = &cobra.Command{
 	Use:     cmdSecretsInit,
 	Short:   cmdSecretsInitDesc,
 	Aliases: []string{"i"},
-	Run:     func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg := GetConfig()
+		err := RunSecretsInit(&cfg)
+		if err != nil {
+			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
+		}
+	},
 }
 
 var secretsEncryptCmd = &cobra.Command{
@@ -47,7 +54,13 @@ var secretsEncryptCmd = &cobra.Command{
 	Short:   cmdSecretsEncryptDesc,
 	Aliases: []string{},
 	Args:    cobra.ExactArgs(1),
-	Run:     func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg := GetConfig()
+		err := RunSecretsEncrypt(&cfg, args[0])
+		if err != nil {
+			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
+		}
+	},
 }
 
 var secretsEditCmd = &cobra.Command{
@@ -55,7 +68,13 @@ var secretsEditCmd = &cobra.Command{
 	Short:   cmdSecretsEditDesc,
 	Aliases: []string{"e"},
 	Args:    cobra.ExactArgs(1),
-	Run:     func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg := GetConfig()
+		err := RunSecretsEdit(&cfg, args[0])
+		if err != nil {
+			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
+		}
+	},
 }
 
 var secretsViewCmd = &cobra.Command{
@@ -63,7 +82,13 @@ var secretsViewCmd = &cobra.Command{
 	Short:   cmdSecretsViewDesc,
 	Aliases: []string{"v"},
 	Args:    cobra.ExactArgs(1),
-	Run:     func(cmd *cobra.Command, args []string) {},
+	Run: func(cmd *cobra.Command, args []string) {
+		cfg := GetConfig()
+		err := RunSecretsView(&cfg, args[0])
+		if err != nil {
+			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
+		}
+	},
 }
 
 func init() {

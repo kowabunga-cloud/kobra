@@ -10,9 +10,78 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"path/filepath"
+	"strings"
 
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
+
+const (
+	AnsibleDirName   = "ansible"
+	HelmfileDirName  = "helmfile"
+	TerraformDirName = "terraform"
+)
+
+func LookupPlatformDir() (string, error) {
+	// where are we ?
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// if there's an 'ansible' sub-directory, we're already at platform's root
+	ansibleDir := fmt.Sprintf("%s/%s", wd, AnsibleDirName)
+	_, err = os.Stat(ansibleDir)
+	if err == nil {
+		return wd, nil
+	}
+
+	// if we're in 'ansible' directory, then platform's root is one level down
+	if filepath.Base(wd) == AnsibleDirName {
+		return filepath.Dir(wd), nil
+	}
+
+	// if there's an 'helmfile' sub-directory, we're already at platform's root
+	helmfileDir := fmt.Sprintf("%s/%s", wd, HelmfileDirName)
+	_, err = os.Stat(helmfileDir)
+	if err == nil {
+		return wd, nil
+	}
+
+	// if we're in 'helmfile' directory, then platform's root is one level down
+	if filepath.Base(wd) == HelmfileDirName {
+		return filepath.Dir(wd), nil
+	}
+
+	// if there's an 'terraform' sub-directory, we're already at platform's root
+	tfDir := fmt.Sprintf("%s/%s", wd, TerraformDirName)
+	_, err = os.Stat(tfDir)
+	if err == nil {
+		return wd, nil
+	}
+
+	// if we're in 'terraform' directory, then platform's root is one level down
+	if filepath.Base(wd) == TerraformDirName {
+		return filepath.Dir(wd), nil
+	}
+
+	// lastly, we may be in a 'terraform' subdirectory, then platform's root is several levels down
+	if strings.Contains(filepath.Dir(wd), TerraformDirName) {
+		// let's walkthrough until we find the right 'terraform' directory
+		upper := filepath.Dir(wd)
+		for {
+			// if we're in 'terraform' directory, then platform's root is one level down
+			if filepath.Base(upper) == TerraformDirName {
+				return filepath.Dir(upper), nil
+			}
+			// go deeper ...
+			upper = filepath.Clean(upper + "/..")
+		}
+	}
+
+	// everything else failed, use current directory
+	return wd, nil
+}
 
 func LookupConfigXDir(d string) (string, error) {
 
@@ -96,4 +165,14 @@ func LookupBinary(cfg *string, bin string) bool {
 	}
 
 	return false
+}
+
+func LookupPluginBinary(bin string) string {
+	dir, err := LookupConfigPluginsDir()
+	if err != nil {
+		klog.Error(err)
+		return ""
+	}
+
+	return fmt.Sprintf("%s/bin/%s", dir, bin)
 }

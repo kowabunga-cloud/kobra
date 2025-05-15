@@ -8,6 +8,8 @@ package kobra
 
 import (
 	"fmt"
+	"io"
+	"os"
 
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 	"gopkg.in/yaml.v3"
@@ -46,17 +48,20 @@ type PlatformConfigSecretsFile struct {
 }
 
 // PlatformConfigSecretsHCP contains Hashicorp Vault secrets-specific configuration
-type PlatformConfigSecretsHCP struct{}
+type PlatformConfigSecretsHCP struct {
+	Endpoint string `yaml:"endpoint,omitempty"`
+}
 
 const (
 	PlatformConfigFile = "kobra.yml"
-	InvalidConfigField = "%s: empty or invalid %s in platform configuration file: '%s'"
+	InvalidConfigField = "empty or invalid %s in platform configuration file: '%s'"
 
-	SecretsProviderAWS   = "aws"
-	SecretsProviderEnv   = "env"
-	SecretsProviderFile  = "file"
-	SecretsProviderHCP   = "hcp"
-	SecretsProviderInput = "input"
+	SecretsProviderAWS     = "aws"
+	SecretsProviderEnv     = "env"
+	SecretsProviderFile    = "file"
+	SecretsProviderHCP     = "hcp"
+	SecretsProviderInput   = "input"
+	SecretsProviderKeyring = "keyring"
 )
 
 func isSupportedSecretsProvider(provider string) bool {
@@ -66,13 +71,14 @@ func isSupportedSecretsProvider(provider string) bool {
 		SecretsProviderEnv,
 		SecretsProviderFile,
 		SecretsProviderHCP,
-		SecretsProviderInput:
+		SecretsProviderInput,
+		SecretsProviderKeyring:
 		return true
 	}
 	return false
 }
 
-func (p *PlatformConfig) IsValid(ptf string) error {
+func (p *PlatformConfig) IsValid() error {
 
 	err := false
 	type configValidateFunc func(string) bool
@@ -88,7 +94,7 @@ func (p *PlatformConfig) IsValid(ptf string) error {
 
 	for _, pr := range params {
 		if !pr.f(pr.key) {
-			klog.Warningf(InvalidConfigField, ptf, pr.comment, pr.key)
+			klog.Warningf(InvalidConfigField, pr.comment, pr.key)
 			err = true
 		}
 	}
@@ -100,22 +106,47 @@ func (p *PlatformConfig) IsValid(ptf string) error {
 	return nil
 }
 
-func GetPlatformConfig(ptf string, contents []byte) (PlatformConfig, error) {
+func GetPlatformConfigFile() string {
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		klog.Fatalf("can't find platform directory")
+	}
+
+	return fmt.Sprintf("%s/%s", ptfDir, PlatformConfigFile)
+}
+
+func GetPlatformConfig() (*PlatformConfig, error) {
 	var cfg PlatformConfig
 
-	// unmarshal configuration
-	err := yaml.Unmarshal(contents, &cfg)
+	f, err := os.Open(GetPlatformConfigFile())
 	if err != nil {
-		e := fmt.Errorf("%s platform_configuration: unable to unmarshal config (%s)", ptf, err)
+		errS := fmt.Errorf("platform_configuration: file (%s) does not exist", PlatformConfigFile)
+		return nil, errS
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	contents, err := io.ReadAll(f)
+	if err != nil {
+		return nil, err
+	}
+
+	// unmarshal configuration
+	err = yaml.Unmarshal(contents, &cfg)
+	if err != nil {
+		e := fmt.Errorf("platform_configuration: unable to unmarshal config (%s)", err)
 		klog.Error(e)
-		return cfg, e
+		return nil, e
 	}
 
 	// check for valid configuration
-	err = cfg.IsValid(ptf)
+	err = cfg.IsValid()
 	if err != nil {
-		klog.Errorf("%s: platform configuration file seems to be invalid and with unsupported keys/values (%s)", ptf, err)
+		e := fmt.Errorf("platform_configuration: file seems to be invalid and with unsupported keys/values (%s)", err)
+		klog.Error(e)
+		return nil, e
 	}
 
-	return cfg, nil
+	return &cfg, nil
 }
