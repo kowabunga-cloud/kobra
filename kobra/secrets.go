@@ -113,6 +113,34 @@ func setSopsEnv(secrets *KobraSecretData) ([]string, string, error) {
 	return envs, sopsName, nil
 }
 
+func GetSecrets(ptfCfg *PlatformConfig) (*KobraSecretData, error) {
+	// instantiate secrets provider
+	sp, err := GetSecretsProvider(ptfCfg)
+	if err != nil {
+		return nil, KobraError("%s", err.Error())
+	}
+
+	// authenticate, when required
+	err = sp.Login()
+	if err != nil {
+		return nil, KobraError("%s", err.Error())
+	}
+
+	// look for master key
+	masterKey, err := sp.Get()
+	if err != nil {
+		return nil, KobraError("%s", err.Error())
+	}
+
+	// decode master key
+	secrets, err := masterKeyDecode(masterKey)
+	if err != nil {
+		return nil, KobraError("%s", err.Error())
+	}
+
+	return secrets, nil
+}
+
 func secretsSopsCmd(cfg *KobraConfig, file string, params ...string) error {
 	// read platform configuration
 	ptfCfg, err := GetPlatformConfig()
@@ -120,28 +148,9 @@ func secretsSopsCmd(cfg *KobraConfig, file string, params ...string) error {
 		return KobraError("%s", err.Error())
 	}
 
-	// instantiate secrets provider
-	sp, err := GetSecretsProvider(ptfCfg)
+	secrets, err := GetSecrets(ptfCfg)
 	if err != nil {
-		return KobraError("%s", err.Error())
-	}
-
-	// authenticate, when required
-	err = sp.Login()
-	if err != nil {
-		return KobraError("%s", err.Error())
-	}
-
-	// look for master key
-	masterKey, err := sp.Get()
-	if err != nil {
-		return KobraError("%s", err.Error())
-	}
-
-	// decode master key
-	secrets, err := masterKeyDecode(masterKey)
-	if err != nil {
-		return KobraError("%s", err.Error())
+		return err
 	}
 
 	// set environment variables
