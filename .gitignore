@@ -3,3 +3,4 @@ dist/
 publish/
 coverage.txt
 kobra.yml
+master_key.txt
