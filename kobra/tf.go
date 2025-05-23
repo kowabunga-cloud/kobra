@@ -20,11 +20,11 @@ const (
 
 func lookupTerraform(ptfCfg *PlatformConfig) (string, error) {
 	binName := OpenTofuBin
-	if ptfCfg.TF.Provider == TfProviderTerraform {
+	if ptfCfg.Toolchain.TF.Provider == TfProviderTerraform {
 		binName = TerraformBin
 	}
 
-	if ptfCfg.TF.UseSystem {
+	if ptfCfg.Toolchain.UseSystem {
 		return LookupSystemBinary(binName)
 	}
 

@@ -619,14 +619,7 @@ func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVers
 }
 
 func SetupPlatformToolchain(cfg *PlatformConfig, tool string) error {
-	useSystem := false
-	switch tool {
-	case "tf":
-		if cfg.TF.UseSystem {
-			useSystem = true
-		}
-	}
-	if useSystem {
+	if cfg.Toolchain.UseSystem {
 		return nil
 	}
 
@@ -639,7 +632,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tool string) error {
 	switch tool {
 	case "tf":
 		binName := OpenTofuBin
-		if cfg.TF.Provider == TfProviderTerraform {
+		if cfg.Toolchain.TF.Provider == TfProviderTerraform {
 			binName = TerraformBin
 		}
 		tp := toolchainTools[binName]
@@ -659,7 +652,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tool string) error {
 			currentVersion = tfv.Version
 		}
 
-		requestedVersion := cfg.TF.Version
+		requestedVersion := cfg.Toolchain.TF.Version
 		if err != nil || currentVersion != requestedVersion {
 			errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
 			if errVersion != nil {

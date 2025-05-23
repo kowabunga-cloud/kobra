@@ -17,8 +17,8 @@ import (
 
 // PlatformConfig is the root definition of a managed platform
 type PlatformConfig struct {
-	Secrets PlatformConfigSecrets `yaml:"secrets"`
-	TF      PlatformConfigTF      `yaml:"tf,omitempty"`
+	Secrets   PlatformConfigSecrets   `yaml:"secrets"`
+	Toolchain PlatformConfigToolchain `yaml:"toolchain"`
 }
 
 // PlatformConfigSecrets contains secrets-specific configuration
@@ -53,11 +53,16 @@ type PlatformConfigSecretsHCP struct {
 	Endpoint string `yaml:"endpoint,omitempty"`
 }
 
-// PlatformConfigTF contains tf-specific configuration
-type PlatformConfigTF struct {
-	Provider  string `yaml:"provider,omitempty"`
-	Version   string `yaml:"version,omitempty"`
-	UseSystem bool   `yaml:"use_system,omitempty"`
+// PlatformConfigToolchain toolchain-specific configuration
+type PlatformConfigToolchain struct {
+	UseSystem bool                      `yaml:"use_system,omitempty"`
+	TF        PlatformConfigToolchainTF `yaml:"tf,omitempty"`
+}
+
+// PlatformConfigToolchainTF contains tf-specific configuration
+type PlatformConfigToolchainTF struct {
+	Provider string `yaml:"provider,omitempty"`
+	Version  string `yaml:"version,omitempty"`
 }
 
 const (
@@ -112,7 +117,7 @@ func (p *PlatformConfig) IsValid() error {
 
 	params := []configParam{
 		configParam{p.Secrets.Provider, isSupportedSecretsProvider, "secrets provider"},
-		configParam{p.TF.Provider, isSupportedTfProvider, "TF provider"},
+		configParam{p.Toolchain.TF.Provider, isSupportedTfProvider, "TF provider"},
 	}
 
 	for _, pr := range params {
@@ -164,8 +169,8 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	}
 
 	// set default value
-	LookupDefault(&cfg.TF.Provider, "TF Provider", TfProviderOpenTofu)
-	LookupDefault(&cfg.TF.Version, "TF Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.TF.Provider, "TF Provider", TfProviderOpenTofu)
+	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
 
 	// check for valid configuration
 	err = cfg.IsValid()
