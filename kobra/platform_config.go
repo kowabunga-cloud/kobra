@@ -18,6 +18,7 @@ import (
 // PlatformConfig is the root definition of a managed platform
 type PlatformConfig struct {
 	Secrets PlatformConfigSecrets `yaml:"secrets"`
+	TF      PlatformConfigTF      `yaml:"tf,omitempty"`
 }
 
 // PlatformConfigSecrets contains secrets-specific configuration
@@ -52,6 +53,13 @@ type PlatformConfigSecretsHCP struct {
 	Endpoint string `yaml:"endpoint,omitempty"`
 }
 
+// PlatformConfigTF contains tf-specific configuration
+type PlatformConfigTF struct {
+	Provider  string `yaml:"provider,omitempty"`
+	Version   string `yaml:"version,omitempty"`
+	UseSystem bool   `yaml:"use_system,omitempty"`
+}
+
 const (
 	PlatformConfigFile = "kobra.yml"
 	InvalidConfigField = "empty or invalid %s in platform configuration file: '%s'"
@@ -62,6 +70,11 @@ const (
 	SecretsProviderHCP     = "hcp"
 	SecretsProviderInput   = "input"
 	SecretsProviderKeyring = "keyring"
+
+	ToolchainVersionLatest = "latest"
+
+	TfProviderOpenTofu  = "opentofu"
+	TfProviderTerraform = "terraform"
 )
 
 func isSupportedSecretsProvider(provider string) bool {
@@ -78,8 +91,17 @@ func isSupportedSecretsProvider(provider string) bool {
 	return false
 }
 
-func (p *PlatformConfig) IsValid() error {
+func isSupportedTfProvider(t string) bool {
+	switch t {
+	case
+		TfProviderOpenTofu,
+		TfProviderTerraform:
+		return true
+	}
+	return false
+}
 
+func (p *PlatformConfig) IsValid() error {
 	err := false
 	type configValidateFunc func(string) bool
 	type configParam struct {
@@ -90,6 +112,7 @@ func (p *PlatformConfig) IsValid() error {
 
 	params := []configParam{
 		configParam{p.Secrets.Provider, isSupportedSecretsProvider, "secrets provider"},
+		configParam{p.TF.Provider, isSupportedTfProvider, "TF provider"},
 	}
 
 	for _, pr := range params {
@@ -139,6 +162,10 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 		klog.Error(e)
 		return nil, e
 	}
+
+	// set default value
+	LookupDefault(&cfg.TF.Provider, "TF Provider", TfProviderOpenTofu)
+	LookupDefault(&cfg.TF.Version, "TF Version", ToolchainVersionLatest)
 
 	// check for valid configuration
 	err = cfg.IsValid()

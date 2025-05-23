@@ -83,6 +83,27 @@ func LookupPlatformDir() (string, error) {
 	return wd, nil
 }
 
+func LookupPlatformBinDir() (string, error) {
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		return "", KobraError("%s", err.Error())
+	}
+
+	cfgDir := fmt.Sprintf("%s/%s", ptfDir, KobraConfigDir)
+	err = os.MkdirAll(cfgDir, 0750)
+	if err != nil && !os.IsExist(err) {
+		return "", err
+	}
+
+	binDir := fmt.Sprintf("%s/%s", cfgDir, KobraConfigPluginsBinDir)
+	err = os.MkdirAll(binDir, 0750)
+	if err != nil && !os.IsExist(err) {
+		return "", err
+	}
+
+	return binDir, nil
+}
+
 func LookupConfigXDir(d string) (string, error) {
 
 	confDir, err := GetConfigDir()
@@ -115,6 +136,27 @@ func LookupConfigPluginsManifest() (string, error) {
 	}
 
 	return fmt.Sprintf("%s/%s", pluginsDir, KobraConfigPluginsManifestFile), nil
+}
+
+func LookupTerraformDir() (string, error) {
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		return "", err
+	}
+
+	// where are we again ?
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// we're already in 'terraform' subdirectory
+	if strings.Contains(filepath.Dir(wd), TerraformDirName) && filepath.Base(wd) != TerraformDirName {
+		return wd, nil
+	}
+
+	// otherwise, let's use default path
+	return fmt.Sprintf("%s/%s", ptfDir, TerraformDirName), nil
 }
 
 func LookupDefault(cfg *string, v, dft string) bool {
@@ -152,19 +194,8 @@ func LookupEnv(cfg *string, env, dft string) bool {
 	return false
 }
 
-func LookupBinary(cfg *string, bin string) bool {
-	if *cfg == "" {
-		path, err := exec.LookPath(bin)
-		if err != nil {
-			klog.Errorf("%s executable can't be found in $PATH", bin)
-			return false
-		}
-		klog.Debugf("Found %s in $PATH, adding it to config ...", bin)
-		*cfg = path
-		return true
-	}
-
-	return false
+func LookupSystemBinary(binName string) (string, error) {
+	return exec.LookPath(binName)
 }
 
 func LookupPluginBinary(bin string) string {
@@ -175,4 +206,13 @@ func LookupPluginBinary(bin string) string {
 	}
 
 	return fmt.Sprintf("%s/bin/%s", dir, bin)
+}
+
+func LookupPlatformBinary(binName string) (string, error) {
+	dir, err := LookupPlatformBinDir()
+	if err != nil {
+		return "", err
+	}
+
+	return fmt.Sprintf("%s/%s", dir, binName), nil
 }

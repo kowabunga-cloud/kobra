@@ -46,6 +46,10 @@ secrets:
   hcp: # optional, hcp-provider specific
     endpoint: string # optional, default to "http://127.0.0.1:8200" if unspecified
   master_key_id: string
+tf:
+  provider: # optional, accepts 'opentofu' (default) and 'terraform'
+  version: # optional, 'latest' if unspecified
+  use_system: false
 ```
 
 ## Secrets Management

@@ -8,6 +8,7 @@ package kobra
 
 import (
 	"archive/zip"
+	"cmp"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -16,6 +17,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"slices"
 	"strings"
 	"syscall"
 
@@ -36,9 +38,16 @@ const (
 	KobraThirdPartyTemplateUriOsAlt2     = "{OS_ALT2}"
 )
 
+type GitHubRelease struct {
+	Tag        string `json:"tag_name"`
+	Draft      bool   `json:"draft"`
+	PreRelease bool   `json:"prerelease"`
+}
+
 type ThirdPartyTool struct {
 	Name       string
 	Version    string
+	GitHubRepo string
 	SourceURI  string
 	Binaries   []string
 	BinaryName string
@@ -59,6 +68,25 @@ var thirdPartyTools = []ThirdPartyTool{
 		SourceURI: "https://github.com/FiloSottile/age/releases/download/v{VERSION}/age-v{VERSION}-{OS}-{ARCH}.tar.gz",
 		Binaries:  []string{fmt.Sprintf("age/%s", AgeBin), fmt.Sprintf("age/%s", AgeKeygenBin)},
 		IsTarball: true,
+	},
+}
+
+var toolchainTools = map[string]ThirdPartyTool{
+	TerraformBin: ThirdPartyTool{
+		Name:       "Terraform",
+		Version:    "1.12.0",
+		GitHubRepo: "hashicorp/terraform",
+		SourceURI:  "https://releases.hashicorp.com/terraform/{VERSION}/terraform_{VERSION}_{OS}_{ARCH}.zip",
+		Binaries:   []string{TerraformBin},
+		IsZipped:   true,
+	},
+	OpenTofuBin: ThirdPartyTool{
+		Name:       "OpenTofu",
+		Version:    "1.9.1",
+		GitHubRepo: "opentofu/opentofu",
+		SourceURI:  "https://github.com/opentofu/opentofu/releases/download/v{VERSION}/tofu_{VERSION}_{OS}_{ARCH}.zip",
+		Binaries:   []string{OpenTofuBin},
+		IsZipped:   true,
 	},
 }
 
@@ -535,6 +563,117 @@ func RunSetup(cfg *KobraConfig, force, clean bool) error {
 #######################################################################################
 `, pathDisclose)
 	fmt.Println(disclose)
+
+	return nil
+}
+
+func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVersion string) error {
+	releaseUri := fmt.Sprintf("https://api.github.com/repos/%s/releases", tp.GitHubRepo)
+	resp, errGet := http.Get(releaseUri)
+	if errGet != nil {
+		return KobraError("%s", errGet.Error())
+	}
+
+	body, errGet := io.ReadAll(resp.Body)
+	if errGet != nil {
+		return KobraError("%s", errGet.Error())
+	}
+
+	var releases []GitHubRelease
+	_ = json.Unmarshal(body, &releases)
+
+	if requestedVersion != ToolchainVersionLatest {
+		// explicit version request
+		tag := fmt.Sprintf("v%s", requestedVersion)
+		found := false
+		for _, r := range releases {
+			if r.Tag == tag {
+				tp.Version = requestedVersion
+				found = true
+				continue
+			}
+		}
+		if !found {
+			return fmt.Errorf("unable to find version %s for %s", requestedVersion, tp.Name)
+		}
+	} else {
+		// find latest stable release
+		slices.SortFunc(releases, func(a, b GitHubRelease) int {
+			return cmp.Compare(a.Tag, b.Tag)
+		})
+
+		releaseVersions := []string{}
+		for _, r := range releases {
+			if r.Draft || r.PreRelease {
+				continue
+			}
+			releaseVersions = append(releaseVersions, strings.ReplaceAll(r.Tag, "v", ""))
+		}
+		if len(releaseVersions) == 0 {
+			return fmt.Errorf("unable to find latest stable release for %s", tp.Name)
+		}
+		tp.Version = releaseVersions[len(releaseVersions)-1]
+	}
+
+	return nil
+}
+
+func SetupPlatformToolchain(cfg *PlatformConfig, tool string) error {
+	useSystem := false
+	switch tool {
+	case "tf":
+		if cfg.TF.UseSystem {
+			useSystem = true
+		}
+	}
+	if useSystem {
+		return nil
+	}
+
+	binDir, err := LookupPlatformBinDir()
+	if err != nil {
+		return KobraError("%s", err.Error())
+	}
+
+	currentVersion := "undefined"
+	switch tool {
+	case "tf":
+		binName := OpenTofuBin
+		if cfg.TF.Provider == TfProviderTerraform {
+			binName = TerraformBin
+		}
+		tp := toolchainTools[binName]
+
+		binExe, err := LookupPlatformBinary(binName)
+		if err != nil {
+			return err
+		}
+
+		out, err := BinExecOut(binExe, binDir, []string{"version", "-json"}, []string{})
+		if err == nil {
+			type tfVersionOutput struct {
+				Version string `json:"terraform_version"`
+			}
+			var tfv tfVersionOutput
+			_ = json.Unmarshal([]byte(out), &tfv)
+			currentVersion = tfv.Version
+		}
+
+		requestedVersion := cfg.TF.Version
+		if err != nil || currentVersion != requestedVersion {
+			errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
+			if errVersion != nil {
+				return errVersion
+			}
+
+			if currentVersion != tp.Version {
+				errExtract := tp.ExtractFromZipArchive(binDir)
+				if errExtract != nil {
+					return errExtract
+				}
+			}
+		}
+	}
 
 	return nil
 }
