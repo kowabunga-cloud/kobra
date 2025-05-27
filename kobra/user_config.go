@@ -26,9 +26,7 @@ const (
 	KobraConfigPluginsDir    = "plugins"
 	KobraConfigPluginsBinDir = "bin"
 
-	SopsBin      = "sops"
-	AgeBin       = "age"
-	AgeKeygenBin = "age-keygen"
+	SopsBin = "sops"
 )
 
 func (c *KobraConfig) Write(dst string) {

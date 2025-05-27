@@ -62,13 +62,6 @@ var thirdPartyTools = []ThirdPartyTool{
 		SourceURI: "https://github.com/getsops/sops/releases/download/v{VERSION}/sops-v{VERSION}.{OS}.{ARCH}",
 		Binaries:  []string{SopsBin},
 	},
-	ThirdPartyTool{
-		Name:      "Age",
-		Version:   "1.2.1",
-		SourceURI: "https://github.com/FiloSottile/age/releases/download/v{VERSION}/age-v{VERSION}-{OS}-{ARCH}.tar.gz",
-		Binaries:  []string{fmt.Sprintf("age/%s", AgeBin), fmt.Sprintf("age/%s", AgeKeygenBin)},
-		IsTarball: true,
-	},
 }
 
 var toolchainTools = map[string]ThirdPartyTool{
