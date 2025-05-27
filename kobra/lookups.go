@@ -161,7 +161,7 @@ func LookupTerraformDir() (string, error) {
 
 func LookupDefault(cfg *string, v, dft string) bool {
 	if *cfg == "" {
-		klog.Warningf("%s variable is not set, using default value", v)
+		klog.Debugf("%s variable is not set, using default value", v)
 		*cfg = dft
 		return true
 	}
@@ -171,7 +171,7 @@ func LookupDefault(cfg *string, v, dft string) bool {
 
 func LookupBooleanDefault(cfg *bool, v string, dft bool) bool {
 	if !*cfg {
-		klog.Warningf("%s variable is not set, using default value", v)
+		klog.Debugf("%s variable is not set, using default value", v)
 		*cfg = dft
 		return true
 	}
