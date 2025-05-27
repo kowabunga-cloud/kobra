@@ -67,7 +67,6 @@ var thirdPartyTools = []ThirdPartyTool{
 var toolchainTools = map[string]ThirdPartyTool{
 	TerraformBin: ThirdPartyTool{
 		Name:       "Terraform",
-		Version:    "1.12.0",
 		GitHubRepo: "hashicorp/terraform",
 		SourceURI:  "https://releases.hashicorp.com/terraform/{VERSION}/terraform_{VERSION}_{OS}_{ARCH}.zip",
 		Binaries:   []string{TerraformBin},
@@ -75,7 +74,6 @@ var toolchainTools = map[string]ThirdPartyTool{
 	},
 	OpenTofuBin: ThirdPartyTool{
 		Name:       "OpenTofu",
-		Version:    "1.9.1",
 		GitHubRepo: "opentofu/opentofu",
 		SourceURI:  "https://github.com/opentofu/opentofu/releases/download/v{VERSION}/tofu_{VERSION}_{OS}_{ARCH}.zip",
 		Binaries:   []string{OpenTofuBin},
