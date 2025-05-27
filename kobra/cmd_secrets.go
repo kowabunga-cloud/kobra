@@ -29,6 +29,18 @@ const (
 
 	cmdSecretsView     = "view"
 	cmdSecretsViewDesc = "Display content of a SOPS-encrypted file"
+
+	cmdSecretsGet     = "get"
+	cmdSecretsGetDesc = "Retrieve Base64-encoded SOPS master key (WARNING: sensitive data)"
+
+	cmdSecretsSet     = "set"
+	cmdSecretsSetDesc = "Set/Overwrite Base64-encoded SOPS master key (WARNING: dangerous, use it with care)"
+
+	cmdSecretsSetMasterKeyDesc    = "Base64-encoded SOPS master key to be set"
+	cmdSecretsSetNoMasterKeyError = "Unable to set secrets, no Base64-encoded provided"
+
+	cmdSecretsMeanItDesc  = "Really perform what's been asked for"
+	cmdSecretsMeanItError = "Unable to get/set secrets. Use --yes-i-really-mean-it flag if that's really what you want"
 )
 
 var secretsCmd = &cobra.Command{
@@ -91,10 +103,54 @@ var secretsViewCmd = &cobra.Command{
 	},
 }
 
+func NewSecretsGetSetSubCommand(name, desc string) *cobra.Command {
+	var iMeanIt bool
+	var masterKey string
+
+	sub := &cobra.Command{
+		Use:   name,
+		Short: desc,
+		Run: func(cmd *cobra.Command, args []string) {
+			cfg := GetConfig()
+
+			// are you sure ?
+			if !iMeanIt {
+				klog.Fatalf(cmdSecretsMeanItError)
+			}
+
+			switch name {
+			case cmdSecretsGet:
+				err := RunSecretsGet(&cfg)
+				if err != nil {
+					klog.Fatalf(cmdFailureStatus, cmdSecretsError)
+				}
+			case cmdSecretsSet:
+				if masterKey == "" {
+					klog.Fatalf(cmdSecretsSetNoMasterKeyError)
+				}
+
+				err := RunSecretsSet(&cfg, masterKey)
+				if err != nil {
+					klog.Fatalf(cmdFailureStatus, cmdSecretsError)
+				}
+			}
+		},
+	}
+
+	sub.Flags().BoolVarP(&iMeanIt, "yes-i-really-mean-it", "y", false, cmdSecretsMeanItDesc)
+	if name == cmdSecretsSet {
+		sub.Flags().StringVarP(&masterKey, "master-key", "k", "", cmdSecretsSetMasterKeyDesc)
+	}
+
+	return sub
+}
+
 func init() {
 	secretsCmd.AddCommand(secretsInitCmd)
 	secretsCmd.AddCommand(secretsEncryptCmd)
 	secretsCmd.AddCommand(secretsEditCmd)
 	secretsCmd.AddCommand(secretsViewCmd)
+	secretsCmd.AddCommand(NewSecretsGetSetSubCommand(cmdSecretsGet, cmdSecretsGetDesc))
+	secretsCmd.AddCommand(NewSecretsGetSetSubCommand(cmdSecretsSet, cmdSecretsSetDesc))
 	RootCmd.AddCommand(secretsCmd)
 }
