@@ -50,7 +50,7 @@ build: ; $(info $(M) building executables…) @ ## Build binaries
 	$Q mkdir -p $(BINDIR)
 	$Q go build \
 		-gcflags="kobra/...=-e" \
-		-ldflags='-X $(PKG_NAME).version=$(VERSION)' \
+		-ldflags='-s -w -X $(PKG_NAME).version=$(VERSION)' \
 		-o $(BINDIR) ./...
 
 .PHONY: release
