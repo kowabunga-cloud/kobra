@@ -11,7 +11,9 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
+	"time"
+
+	"filippo.io/age"
 
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
@@ -238,23 +240,15 @@ func RunSecretsInit(cfg *KobraConfig) error {
 
 	// no master key can be found, issue a new one
 	klog.Info("Issuing new private/public master key ...")
-	keygen := LookupPluginBinary(AgeKeygenBin)
-	keys, err := BinExecOut(keygen, "", []string{}, []string{})
+	identity, err := age.GenerateX25519Identity()
 	if err != nil {
 		return KobraError("%s", err.Error())
 	}
 
-	var data KobraSecretData
-	for _, k := range strings.Split(keys, "\n") {
-		if strings.Contains(k, SopsCreateAtPrefix) {
-			data.CreatedAt = strings.Split(k, SopsCreateAtPrefix)[1]
-		}
-		if strings.Contains(k, SopsPublicKeyPrefix) {
-			data.PublicKey = strings.Split(k, SopsPublicKeyPrefix)[1]
-		}
-		if strings.Contains(k, SopsAgeSecretKeyPrefix) {
-			data.SecretKey = k
-		}
+	data := KobraSecretData{
+		CreatedAt: time.Now().Format(time.RFC3339),
+		PublicKey: identity.Recipient().String(),
+		SecretKey: identity.String(),
 	}
 
 	encKey := masterKeyEncode(&data)
