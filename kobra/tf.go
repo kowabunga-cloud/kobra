@@ -115,6 +115,11 @@ func RunTF(cfg *KobraConfig, cmd, module, resource, output string, auto, bypass 
 		return err
 	}
 
+	ready, err := IsGitRepoUpToDate(ptfCfg, bypass)
+	if !ready || err != nil {
+		return KobraError(GitDivergenceError)
+	}
+
 	// now try to run TF
 	err = executeTF(cfg, ptfCfg, secrets, tfDir, cmd, module, resource, output, auto, extraArgs)
 	if err != nil {

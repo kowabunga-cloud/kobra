@@ -17,8 +17,30 @@ import (
 
 // PlatformConfig is the root definition of a managed platform
 type PlatformConfig struct {
+	Git       PlatformConfigGit       `yaml:"git,omitempty"`
 	Secrets   PlatformConfigSecrets   `yaml:"secrets"`
 	Toolchain PlatformConfigToolchain `yaml:"toolchain"`
+}
+
+// PlatformConfigGit contains git-specific configuration
+type PlatformConfigGit struct {
+	Method string                `yaml:"method,omitempty"`
+	SSH    PlatformConfigGitSSH  `yaml:"ssh,omitempty"`
+	HTTP   PlatformConfigGitHTTP `yaml:"http,omitempty"`
+}
+
+// PlatformConfigGitSSH contains git-ssh-specific configuration
+type PlatformConfigGitSSH struct {
+	User       string `yaml:"user,omitempty"`
+	PrivateKey string `yaml:"private_key_file,omitempty"`
+	Password   string `yaml:"password,omitempty"`
+}
+
+// PlatformConfigGitHTTP contains git-http-specific configuration
+type PlatformConfigGitHTTP struct {
+	Username string `yaml:"username,omitempty"`
+	Password string `yaml:"password,omitempty"`
+	Token    string `yaml:"token,omitempty"`
 }
 
 // PlatformConfigSecrets contains secrets-specific configuration
@@ -69,6 +91,11 @@ const (
 	PlatformConfigFile = "kobra.yml"
 	InvalidConfigField = "empty or invalid %s in platform configuration file: '%s'"
 
+	GitMethodSSH  = "ssh"
+	GitMethodHTTP = "http"
+
+	GitDefaultUserSSH = "git"
+
 	SecretsProviderAWS     = "aws"
 	SecretsProviderEnv     = "env"
 	SecretsProviderFile    = "file"
@@ -81,6 +108,16 @@ const (
 	TfProviderOpenTofu  = "opentofu"
 	TfProviderTerraform = "terraform"
 )
+
+func isSupportedGitMethod(method string) bool {
+	switch method {
+	case
+		GitMethodSSH,
+		GitMethodHTTP:
+		return true
+	}
+	return false
+}
 
 func isSupportedSecretsProvider(provider string) bool {
 	switch provider {
@@ -116,6 +153,7 @@ func (p *PlatformConfig) IsValid() error {
 	}
 
 	params := []configParam{
+		configParam{p.Git.Method, isSupportedGitMethod, "git method"},
 		configParam{p.Secrets.Provider, isSupportedSecretsProvider, "secrets provider"},
 		configParam{p.Toolchain.TF.Provider, isSupportedTfProvider, "TF provider"},
 	}
@@ -169,6 +207,7 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	}
 
 	// set default value
+	LookupDefault(&cfg.Git.Method, "Git Method", GitMethodSSH)
 	LookupDefault(&cfg.Toolchain.TF.Provider, "TF Provider", TfProviderOpenTofu)
 	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
 

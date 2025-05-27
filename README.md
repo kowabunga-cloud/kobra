@@ -33,24 +33,34 @@ This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a c
 Kobra-managed platforms require a specific **kobra.yml** file to exist at the root of your platform. This YAML-formated file contains several important pieces of configuration, e.g:
 
 ```yaml
+git:                                  # optional
+  method: string                      # optional, accepts 'ssh' (default) and 'http'
+  ssh:                                # optional
+    user: string                      # optional, 'git' if unspecified
+    private_key_file: string          # optional, guessed from ~/.ssh/config if unspecified
+    password: string                  # optional, password used to decrypt private key file, if any
+  http:                               # optional
+    username: string                  # optional, basic auth username
+    password: string                  # optional, basic auth password
+    token: string                     # optional, e.g GitHub PAT (Personal Access Token)
 secrets:
-  provider: # aws, env, file, hcp, input, keyring
-  aws: # optional, aws-provider specific
+  provider: string                    # aws, env, file, hcp, input, keyring
+  aws:                                # optional, aws-provider specific
     region: string
     role_arn: string
     id: string
-  env: # optional, env-provider specific
-    var: string # optional, defaults to KOBRA_MASTER_KEY
-  file: # optional, file-provider specific
+  env:                                # optional, env-provider specific
+    var: string                       # optional, defaults to KOBRA_MASTER_KEY
+  file:                               # optional, file-provider specific
     path: string
-  hcp: # optional, hcp-provider specific
-    endpoint: string # optional, default to "http://127.0.0.1:8200" if unspecified
+  hcp:                                # optional, hcp-provider specific
+    endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
   master_key_id: string
-toolchain:
-  use_system: false
-  tf:
-    provider: # optional, accepts 'opentofu' (default) and 'terraform'
-    version: # optional, 'latest' if unspecified
+toolchain:                            # optional
+  use_system: bool                    # optional, 'false' if unspecified
+  tf:                                 # optional
+    provider: string                  # optional, accepts 'opentofu' (default) and 'terraform'
+    version: string                   # optional, 'latest' if unspecified
 ```
 
 ## Secrets Management
