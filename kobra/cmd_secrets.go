@@ -137,7 +137,7 @@ func NewSecretsGetSetSubCommand(name, desc string) *cobra.Command {
 		},
 	}
 
-	sub.Flags().BoolVarP(&iMeanIt, "yes-i-really-mean-it", "y", false, cmdSecretsMeanItDesc)
+	sub.Flags().BoolVarP(&iMeanIt, "yes-i-really-mean-it", "", false, cmdSecretsMeanItDesc)
 	if name == cmdSecretsSet {
 		sub.Flags().StringVarP(&masterKey, "master-key", "k", "", cmdSecretsSetMasterKeyDesc)
 	}
