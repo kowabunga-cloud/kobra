@@ -61,6 +61,10 @@ toolchain:                            # optional
   tf:                                 # optional
     provider: string                  # optional, accepts 'opentofu' (default) and 'terraform'
     version: string                   # optional, 'latest' if unspecified
+  helm:                               # optional
+    version: string                   # optional, 'latest' if unspecified
+  helmfile:                           # optional
+    version: string                   # optional, 'latest' if unspecified
 ```
 
 ## Secrets Management

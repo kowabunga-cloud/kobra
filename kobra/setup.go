@@ -36,6 +36,10 @@ const (
 	KobraThirdPartyTemplateUriOs         = "{OS}"
 	KobraThirdPartyTemplateUriOsAlt      = "{OS_ALT}"
 	KobraThirdPartyTemplateUriOsAlt2     = "{OS_ALT2}"
+
+	ToolchainToolTF       = "tf"
+	ToolchainToolHelm     = "helm"
+	ToolchainToolHelmfile = "helmfile"
 )
 
 type GitHubRelease struct {
@@ -78,6 +82,20 @@ var toolchainTools = map[string]ThirdPartyTool{
 		SourceURI:  "https://github.com/opentofu/opentofu/releases/download/v{VERSION}/tofu_{VERSION}_{OS}_{ARCH}.zip",
 		Binaries:   []string{OpenTofuBin},
 		IsZipped:   true,
+	},
+	HelmBin: ThirdPartyTool{
+		Name:       "Helm",
+		GitHubRepo: "helm/helm",
+		SourceURI:  "https://get.helm.sh/helm-v{VERSION}-{OS}-{ARCH}.tar.gz",
+		Binaries:   []string{fmt.Sprintf("%s-%s/%s", runtime.GOOS, runtime.GOARCH, HelmBin)},
+		IsTarball:  true,
+	},
+	HelmfileBin: ThirdPartyTool{
+		Name:       "Helmfile",
+		GitHubRepo: "helmfile/helmfile",
+		SourceURI:  "https://github.com/helmfile/helmfile/releases/download/v{VERSION}/helmfile_{VERSION}_{OS}_{ARCH}.tar.gz",
+		Binaries:   []string{HelmfileBin},
+		IsTarball:  true,
 	},
 }
 
@@ -609,7 +627,7 @@ func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVers
 	return nil
 }
 
-func SetupPlatformToolchain(cfg *PlatformConfig, tool string) error {
+func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 	if cfg.Toolchain.UseSystem {
 		return nil
 	}
@@ -619,41 +637,98 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tool string) error {
 		return KobraError("%s", err.Error())
 	}
 
-	currentVersion := "undefined"
-	switch tool {
-	case "tf":
-		binName := OpenTofuBin
-		if cfg.Toolchain.TF.Provider == TfProviderTerraform {
-			binName = TerraformBin
-		}
-		tp := toolchainTools[binName]
-
-		binExe, err := LookupPlatformBinary(binName)
-		if err != nil {
-			return err
-		}
-
-		out, err := BinExecOut(binExe, binDir, []string{"version", "-json"}, []string{})
-		if err == nil {
-			type tfVersionOutput struct {
-				Version string `json:"terraform_version"`
+	for _, tool := range tools {
+		currentVersion := "undefined"
+		switch tool {
+		case ToolchainToolTF:
+			binName := OpenTofuBin
+			if cfg.Toolchain.TF.Provider == TfProviderTerraform {
+				binName = TerraformBin
 			}
-			var tfv tfVersionOutput
-			_ = json.Unmarshal([]byte(out), &tfv)
-			currentVersion = tfv.Version
-		}
+			tp := toolchainTools[binName]
 
-		requestedVersion := cfg.Toolchain.TF.Version
-		if err != nil || currentVersion != requestedVersion {
-			errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
-			if errVersion != nil {
-				return errVersion
+			binExe, err := LookupPlatformBinary(binName)
+			if err != nil {
+				return err
 			}
 
-			if currentVersion != tp.Version {
-				errExtract := tp.ExtractFromZipArchive(binDir)
-				if errExtract != nil {
-					return errExtract
+			out, err := BinExecOut(binExe, binDir, []string{"version", "-json"}, []string{})
+			if err == nil {
+				type tfVersionOutput struct {
+					Version string `json:"terraform_version"`
+				}
+				var tfv tfVersionOutput
+				_ = json.Unmarshal([]byte(out), &tfv)
+				currentVersion = tfv.Version
+			}
+
+			requestedVersion := cfg.Toolchain.TF.Version
+			if err != nil || currentVersion != requestedVersion {
+				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
+				if errVersion != nil {
+					return errVersion
+				}
+
+				if currentVersion != tp.Version {
+					errExtract := tp.ExtractFromZipArchive(binDir)
+					if errExtract != nil {
+						return errExtract
+					}
+				}
+			}
+		case ToolchainToolHelm:
+			tp := toolchainTools[HelmBin]
+
+			binExe, err := LookupPlatformBinary(HelmBin)
+			if err != nil {
+				return err
+			}
+
+			out, err := BinExecOutNoErr(binExe, binDir, []string{"version", "--template", "{{.Version}}"}, []string{})
+			if err == nil {
+				currentVersion = strings.TrimSuffix(out, "\n")
+				currentVersion = strings.ReplaceAll(currentVersion, "v", "")
+			}
+
+			requestedVersion := cfg.Toolchain.Helm.Version
+			if err != nil || currentVersion != requestedVersion {
+				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
+				if errVersion != nil {
+					return errVersion
+				}
+
+				if currentVersion != tp.Version {
+					errExtract := tp.ExtractFromTarballArchive(binDir)
+					if errExtract != nil {
+						return errExtract
+					}
+				}
+			}
+		case ToolchainToolHelmfile:
+			tp := toolchainTools[HelmfileBin]
+
+			binExe, err := LookupPlatformBinary(HelmfileBin)
+			if err != nil {
+				return err
+			}
+
+			out, err := BinExecOut(binExe, binDir, []string{"version", "-o", "short"}, []string{})
+			if err == nil {
+				currentVersion = strings.TrimSuffix(out, "\n")
+			}
+
+			requestedVersion := cfg.Toolchain.Helmfile.Version
+			if err != nil || currentVersion != requestedVersion {
+				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
+				if errVersion != nil {
+					return errVersion
+				}
+
+				if currentVersion != tp.Version {
+					errExtract := tp.ExtractFromTarballArchive(binDir)
+					if errExtract != nil {
+						return errExtract
+					}
 				}
 			}
 		}

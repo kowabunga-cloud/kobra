@@ -104,7 +104,7 @@ func RunTF(cfg *KobraConfig, cmd, module, resource, output string, auto, bypass 
 	}
 
 	// setup toolchain, if needed
-	err = SetupPlatformToolchain(ptfCfg, "tf")
+	err = SetupPlatformToolchain(ptfCfg, ToolchainToolTF)
 	if err != nil {
 		return KobraError("%s", err.Error())
 	}

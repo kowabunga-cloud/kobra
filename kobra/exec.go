@@ -15,7 +15,7 @@ import (
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
 
-func binExec(bin, dir string, args, envs []string, stdout io.Writer) error {
+func binExec(bin, dir string, args, envs []string, stdout, stderr io.Writer) error {
 
 	var cmd exec.Cmd
 
@@ -30,7 +30,7 @@ func binExec(bin, dir string, args, envs []string, stdout io.Writer) error {
 	cmd.Env = binEnvs
 	cmd.Stdout = stdout
 	cmd.Stdin = os.Stdin
-	cmd.Stderr = stdout
+	cmd.Stderr = stderr
 
 	klog.Debugf("Running %s %s", strings.Join(envs[:], " "), strings.Join(cmd.Args[:], " "))
 	if err := cmd.Run(); err != nil {
@@ -41,11 +41,17 @@ func binExec(bin, dir string, args, envs []string, stdout io.Writer) error {
 }
 
 func BinExec(bin, dir string, args, envs []string) error {
-	return binExec(bin, dir, args, envs, os.Stdout)
+	return binExec(bin, dir, args, envs, os.Stdout, os.Stdout)
 }
 
 func BinExecOut(bin, dir string, args, envs []string) (string, error) {
 	var outbuf strings.Builder
-	err := binExec(bin, dir, args, envs, &outbuf)
+	err := binExec(bin, dir, args, envs, &outbuf, &outbuf)
+	return outbuf.String(), err
+}
+
+func BinExecOutNoErr(bin, dir string, args, envs []string) (string, error) {
+	var outbuf strings.Builder
+	err := binExec(bin, dir, args, envs, &outbuf, nil)
 	return outbuf.String(), err
 }

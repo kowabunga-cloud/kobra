@@ -138,6 +138,29 @@ func LookupConfigPluginsManifest() (string, error) {
 	return fmt.Sprintf("%s/%s", pluginsDir, KobraConfigPluginsManifestFile), nil
 }
 
+func LookupHelmfileDir() (string, error) {
+	var hfDir string
+
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		return hfDir, err
+	}
+
+	// where are we again ?
+	wd, err := os.Getwd()
+	if err != nil {
+		return "", err
+	}
+
+	// we're already in 'helmfile' subdirectory
+	if strings.Contains(filepath.Dir(wd), HelmfileDirName) && filepath.Base(wd) != HelmfileDirName {
+		return wd, nil
+	}
+
+	// otherwise, let's use default path
+	return fmt.Sprintf("%s/%s", ptfDir, HelmfileDirName), nil
+}
+
 func LookupTerraformDir() (string, error) {
 	ptfDir, err := LookupPlatformDir()
 	if err != nil {

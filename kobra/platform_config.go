@@ -77,14 +77,26 @@ type PlatformConfigSecretsHCP struct {
 
 // PlatformConfigToolchain toolchain-specific configuration
 type PlatformConfigToolchain struct {
-	UseSystem bool                      `yaml:"use_system,omitempty"`
-	TF        PlatformConfigToolchainTF `yaml:"tf,omitempty"`
+	UseSystem bool                            `yaml:"use_system,omitempty"`
+	TF        PlatformConfigToolchainTF       `yaml:"tf,omitempty"`
+	Helm      PlatformConfigToolchainHelm     `yaml:"helm,omitempty"`
+	Helmfile  PlatformConfigToolchainHelmfile `yaml:"helmfile,omitempty"`
 }
 
 // PlatformConfigToolchainTF contains tf-specific configuration
 type PlatformConfigToolchainTF struct {
 	Provider string `yaml:"provider,omitempty"`
 	Version  string `yaml:"version,omitempty"`
+}
+
+// PlatformConfigToolchainHelm contains helm-specific configuration
+type PlatformConfigToolchainHelm struct {
+	Version string `yaml:"version,omitempty"`
+}
+
+// PlatformConfigToolchainHelmfile contains helmfile-specific configuration
+type PlatformConfigToolchainHelmfile struct {
+	Version string `yaml:"version,omitempty"`
 }
 
 const (
@@ -210,6 +222,8 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	LookupDefault(&cfg.Git.Method, "Git Method", GitMethodSSH)
 	LookupDefault(&cfg.Toolchain.TF.Provider, "TF Provider", TfProviderOpenTofu)
 	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.Helm.Version, "Helm Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.Helmfile.Version, "Helmfile Version", ToolchainVersionLatest)
 
 	// check for valid configuration
 	err = cfg.IsValid()
