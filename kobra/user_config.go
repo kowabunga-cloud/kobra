@@ -21,12 +21,8 @@ type KobraConfig struct {
 }
 
 const (
-	KobraConfigDir           = ".kobra.d"
-	KobraConfigFile          = "config"
-	KobraConfigPluginsDir    = "plugins"
-	KobraConfigPluginsBinDir = "bin"
-
-	SopsBin = "sops"
+	KobraConfigDir  = ".kobra.d"
+	KobraConfigFile = "config"
 )
 
 func (c *KobraConfig) Write(dst string) {

@@ -17,6 +17,8 @@ import (
 )
 
 const (
+	KobraPlatformBinDir = "bin"
+
 	AnsibleDirName   = "ansible"
 	HelmfileDirName  = "helmfile"
 	TerraformDirName = "terraform"
@@ -95,47 +97,13 @@ func LookupPlatformBinDir() (string, error) {
 		return "", err
 	}
 
-	binDir := fmt.Sprintf("%s/%s", cfgDir, KobraConfigPluginsBinDir)
+	binDir := fmt.Sprintf("%s/%s", cfgDir, KobraPlatformBinDir)
 	err = os.MkdirAll(binDir, 0750)
 	if err != nil && !os.IsExist(err) {
 		return "", err
 	}
 
 	return binDir, nil
-}
-
-func LookupConfigXDir(d string) (string, error) {
-
-	confDir, err := GetConfigDir()
-	if err != nil {
-		return "", KobraError("%s", err.Error())
-	}
-
-	dir := fmt.Sprintf("%s/%s", confDir, d)
-	err = os.MkdirAll(dir, 0750)
-	if err != nil && !os.IsExist(err) {
-		return "", err
-	}
-
-	return dir, nil
-}
-
-func LookupConfigPluginsDir() (string, error) {
-	return LookupConfigXDir(KobraConfigPluginsDir)
-}
-
-func LookupConfigPluginsBinDir() (string, error) {
-	dir := fmt.Sprintf("%s/%s", KobraConfigPluginsDir, KobraConfigPluginsBinDir)
-	return LookupConfigXDir(dir)
-}
-
-func LookupConfigPluginsManifest() (string, error) {
-	pluginsDir, err := LookupConfigPluginsDir()
-	if err != nil {
-		return "", err
-	}
-
-	return fmt.Sprintf("%s/%s", pluginsDir, KobraConfigPluginsManifestFile), nil
 }
 
 func LookupHelmfileDir() (string, error) {
@@ -219,16 +187,6 @@ func LookupEnv(cfg *string, env, dft string) bool {
 
 func LookupSystemBinary(binName string) (string, error) {
 	return exec.LookPath(binName)
-}
-
-func LookupPluginBinary(bin string) string {
-	dir, err := LookupConfigPluginsDir()
-	if err != nil {
-		klog.Error(err)
-		return ""
-	}
-
-	return fmt.Sprintf("%s/bin/%s", dir, bin)
 }
 
 func LookupPlatformBinary(binName string) (string, error) {
