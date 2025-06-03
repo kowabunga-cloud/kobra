@@ -41,37 +41,43 @@ import (
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
 
+const (
+	SopsReadFileErr      = "error reading file: %s"
+	SopsUnmarshalErr     = "error unmarshalling file: %s"
+	SopsEmptyFileErr     = "file cannot be completely empty, it must contain at least one document"
+	SopsGenerateKeyErr   = "could not generate data key: %s"
+	SopsMarshalTreeErr   = "could not marshal tree: %s"
+	SopsNoEditorErr      = "could not run editor: %s"
+	SopsHashErr          = "could not hash file: %s"
+	SopsUnchangedFileErr = "file has not changed, exiting."
+	SopsReadErr          = "could not read edited file: %s"
+	SopsComparisonErr    = "failed to compare document version %q with program version %q: %v"
+	SopsEditorErr        = "no editor available: sops attempts to use the editor defined in the SOPS_EDITOR or EDITOR environment variables, and if that's not set defaults to any of %s, but none of them could be found"
+	SopsEncryptErr       = "error encrypting the data key with one or more master keys: %s"
+	SopsInPlaceErr       = "could not open in-place file for writing: %s"
+	SopsCreateDirErr     = "could not create temporary directory: %s"
+	SopsCreateFileErr    = "could not create temporary file: %s"
+	SopsWriteErr         = "could not write output file: %s"
+)
+
 type encryptConfig struct {
-	UnencryptedSuffix       string
-	EncryptedSuffix         string
-	UnencryptedRegex        string
-	EncryptedRegex          string
-	UnencryptedCommentRegex string
-	EncryptedCommentRegex   string
-	MACOnlyEncrypted        bool
-	KeyGroups               []sops.KeyGroup
-	GroupThreshold          int
+	UnencryptedSuffix string
+	KeyGroups         []sops.KeyGroup
 }
 
 type encryptOpts struct {
-	Cipher        sops.Cipher
-	InputStore    sops.Store
-	OutputStore   sops.Store
-	InputPath     string
-	ReadFromStdin bool
-	KeyServices   []keyservice.KeyServiceClient
+	Cipher      sops.Cipher
+	InputStore  sops.Store
+	OutputStore sops.Store
+	InputPath   string
 	encryptConfig
 }
 
 type editOpts struct {
-	Cipher          sops.Cipher
-	InputStore      common.Store
-	OutputStore     common.Store
-	InputPath       string
-	IgnoreMAC       bool
-	KeyServices     []keyservice.KeyServiceClient
-	DecryptionOrder []string
-	ShowMasterKeys  bool
+	Cipher      sops.Cipher
+	InputStore  common.Store
+	OutputStore common.Store
+	InputPath   string
 }
 
 type editExampleOpts struct {
@@ -80,11 +86,10 @@ type editExampleOpts struct {
 }
 
 type runEditorUntilOkOpts struct {
-	TmpFileName    string
-	OriginalHash   []byte
-	InputStore     sops.Store
-	ShowMasterKeys bool
-	Tree           *sops.Tree
+	TmpFileName  string
+	OriginalHash []byte
+	InputStore   sops.Store
+	Tree         *sops.Tree
 }
 
 type fileAlreadyEncryptedError struct{}
@@ -102,7 +107,7 @@ func (err *fileAlreadyEncryptedError) UserError() string {
 		"encrypt files that already contain such an entry.\n\n" +
 		"If this is an unencrypted file, rename the '" + stores.SopsMetadataKey + "' entry.\n\n" +
 		"If this is an encrypted file and you want to edit it, use the " +
-		"editor mode, for example: `sops my_file.yaml`"
+		"editor mode, for example: `kobra secrets edit my_file.yaml`"
 	return wordwrap.WrapString(message, 75)
 }
 
@@ -117,37 +122,30 @@ func metadataFromEncryptionConfig(config encryptConfig) sops.Metadata {
 	return sops.Metadata{
 		KeyGroups:               config.KeyGroups,
 		UnencryptedSuffix:       config.UnencryptedSuffix,
-		EncryptedSuffix:         config.EncryptedSuffix,
-		UnencryptedRegex:        config.UnencryptedRegex,
-		EncryptedRegex:          config.EncryptedRegex,
-		UnencryptedCommentRegex: config.UnencryptedCommentRegex,
-		EncryptedCommentRegex:   config.EncryptedCommentRegex,
-		MACOnlyEncrypted:        config.MACOnlyEncrypted,
+		EncryptedSuffix:         "",
+		UnencryptedRegex:        "",
+		EncryptedRegex:          "",
+		UnencryptedCommentRegex: "",
+		EncryptedCommentRegex:   "",
+		MACOnlyEncrypted:        false,
 		Version:                 vers.Version,
-		ShamirThreshold:         config.GroupThreshold,
+		ShamirThreshold:         0,
 	}
 }
 
 func encrypt(opts encryptOpts) (encryptedFile []byte, err error) {
 	// Load the file
-	var fileBytes []byte
-	if opts.ReadFromStdin {
-		fileBytes, err = io.ReadAll(os.Stdin)
-		if err != nil {
-			return nil, common.NewExitError(fmt.Sprintf("error reading from stdin: %s", err), codes.CouldNotReadInputFile)
-		}
-	} else {
-		fileBytes, err = os.ReadFile(opts.InputPath)
-		if err != nil {
-			return nil, common.NewExitError(fmt.Sprintf("error reading file: %s", err), codes.CouldNotReadInputFile)
-		}
+	fileBytes, err := os.ReadFile(opts.InputPath)
+	if err != nil {
+		return nil, fmt.Errorf(SopsReadFileErr, err)
 	}
+
 	branches, err := opts.InputStore.LoadPlainFile(fileBytes)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("error unmarshalling file: %s", err), codes.CouldNotReadInputFile)
+		return nil, fmt.Errorf(SopsUnmarshalErr, err)
 	}
 	if len(branches) < 1 {
-		return nil, common.NewExitError("file cannot be completely empty, it must contain at least one document", codes.NeedAtLeastOneDocument)
+		return nil, fmt.Errorf("%s", SopsEmptyFileErr)
 	}
 	if err := ensureNoMetadata(opts, branches[0]); err != nil {
 		return nil, common.NewExitError(err, codes.FileAlreadyEncrypted)
@@ -161,9 +159,9 @@ func encrypt(opts encryptOpts) (encryptedFile []byte, err error) {
 		Metadata: metadataFromEncryptionConfig(opts.encryptConfig),
 		FilePath: path,
 	}
-	dataKey, errs := tree.GenerateDataKeyWithKeyServices(opts.KeyServices)
+	dataKey, errs := tree.GenerateDataKeyWithKeyServices(keyservices())
 	if len(errs) > 0 {
-		err = fmt.Errorf("could not generate data key: %s", errs)
+		err = fmt.Errorf(SopsGenerateKeyErr, errs)
 		return nil, err
 	}
 
@@ -178,7 +176,7 @@ func encrypt(opts encryptOpts) (encryptedFile []byte, err error) {
 
 	encryptedFile, err = opts.OutputStore.EmitEncryptedFile(tree)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("Could not marshal tree: %s", err), codes.ErrorDumpingTree)
+		return nil, fmt.Errorf(SopsMarshalTreeErr, err)
 	}
 	return
 }
@@ -192,17 +190,20 @@ func hashFile(filePath string) ([]byte, error) {
 	defer func() {
 		_ = file.Close()
 	}()
+
 	hash := sha256.New()
-	if _, err := io.Copy(hash, file); err != nil {
+	_, err = io.Copy(hash, file)
+	if err != nil {
 		return result, err
 	}
+
 	return hash.Sum(result), nil
 }
 
 func keyGroups(file string) ([]sops.KeyGroup, error) {
 	var ageMasterKeys []keys.MasterKey
 
-	ageKeys, err := age.MasterKeysFromRecipients(os.Getenv("SOPS_AGE_RECIPIENTS"))
+	ageKeys, err := age.MasterKeysFromRecipients(os.Getenv(SopsAgeRecipientsEnv))
 	if err != nil {
 		return nil, err
 	}
@@ -215,44 +216,15 @@ func keyGroups(file string) ([]sops.KeyGroup, error) {
 	return []sops.KeyGroup{group}, nil
 }
 
-func shamirThreshold(file string) (int, error) {
-	// if c.Int("shamir-secret-sharing-threshold") != 0 {
-	// 	return c.Int("shamir-secret-sharing-threshold"), nil
-	// }
-	// conf, err := loadConfig(c, file, nil)
-	// if conf == nil {
-	// 	// This takes care of the following two case:
-	// 	// 1. No config was provided, or contains no creation rules. Err will be nil and ShamirThreshold will be the default value of 0.
-	// 	// 2. We did find a config file, but failed to load it. In that case the calling function will print the error and exit.
-	// 	return 0, err
-	// }
-	// return conf.ShamirThreshold, nil
-	return 0, nil
-}
-
 func getEncryptConfig(fileName string) (encryptConfig, error) {
-	var groups []sops.KeyGroup
 	groups, err := keyGroups(fileName)
 	if err != nil {
 		return encryptConfig{}, err
 	}
 
-	var threshold int
-	threshold, err = shamirThreshold(fileName)
-	if err != nil {
-		return encryptConfig{}, err
-	}
-
 	return encryptConfig{
-		UnencryptedSuffix:       sops.DefaultUnencryptedSuffix,
-		EncryptedSuffix:         "",
-		UnencryptedRegex:        "",
-		EncryptedRegex:          "",
-		UnencryptedCommentRegex: "",
-		EncryptedCommentRegex:   "",
-		MACOnlyEncrypted:        false,
-		KeyGroups:               groups,
-		GroupThreshold:          threshold,
+		UnencryptedSuffix: sops.DefaultUnencryptedSuffix,
+		KeyGroups:         groups,
 	}, nil
 }
 
@@ -260,18 +232,18 @@ func runEditorUntilOk(opts runEditorUntilOkOpts) error {
 	for {
 		err := runEditor(opts.TmpFileName)
 		if err != nil {
-			return common.NewExitError(fmt.Sprintf("Could not run editor: %s", err), codes.NoEditorFound)
+			return fmt.Errorf(SopsNoEditorErr, err)
 		}
 		newHash, err := hashFile(opts.TmpFileName)
 		if err != nil {
-			return common.NewExitError(fmt.Sprintf("Could not hash file: %s", err), codes.CouldNotReadInputFile)
+			return fmt.Errorf(SopsHashErr, err)
 		}
 		if bytes.Equal(newHash, opts.OriginalHash) {
-			return common.NewExitError("File has not changed, exiting.", codes.FileHasNotBeenModified)
+			return fmt.Errorf("%s", SopsUnchangedFileErr)
 		}
 		edited, err := os.ReadFile(opts.TmpFileName)
 		if err != nil {
-			return common.NewExitError(fmt.Sprintf("Could not read edited file: %s", err), codes.CouldNotReadInputFile)
+			return fmt.Errorf(SopsReadErr, err)
 		}
 		newBranches, err := opts.InputStore.LoadPlainFile(edited)
 		if err != nil {
@@ -281,24 +253,10 @@ func runEditorUntilOk(opts runEditorUntilOkOpts) error {
 			_, _ = bufio.NewReader(os.Stdin).ReadByte()
 			continue
 		}
-		if opts.ShowMasterKeys {
-			// The file is not actually encrypted, but it contains SOPS
-			// metadata
-			t, err := opts.InputStore.LoadEncryptedFile(edited)
-			if err != nil {
-				klog.Errorf("SOPS metadata is invalid. Press a key to " +
-					"return to the editor, or Ctrl+C to exit.")
-				_, _ = bufio.NewReader(os.Stdin).ReadByte()
-				continue
-			}
-			// Replace the whole tree, because otherwise newBranches would
-			// contain the SOPS metadata
-			opts.Tree = &t
-		}
 		opts.Tree.Branches = newBranches
 		needVersionUpdated, err := vers.AIsNewerThanB(vers.Version, opts.Tree.Metadata.Version)
 		if err != nil {
-			return common.NewExitError(fmt.Sprintf("Failed to compare document version %q with program version %q: %v", opts.Tree.Metadata.Version, vers.Version, err), codes.FailedToCompareVersions)
+			return fmt.Errorf(SopsComparisonErr, opts.Tree.Metadata.Version, vers.Version, err)
 		}
 		if needVersionUpdated {
 			opts.Tree.Metadata.Version = vers.Version
@@ -324,7 +282,7 @@ func runEditor(path string) error {
 	}
 	var cmd *exec.Cmd
 	if editor == "" {
-		editor, err := lookupAnyEditor("vim", "nano", "vi")
+		editor, err := lookupAnyEditor("nano", "emacs", "vim", "vi")
 		if err != nil {
 			return err
 		}
@@ -351,14 +309,14 @@ func lookupAnyEditor(editorNames ...string) (editorPath string, err error) {
 			return editorPath, nil
 		}
 	}
-	return "", fmt.Errorf("no editor available: sops attempts to use the editor defined in the SOPS_EDITOR or EDITOR environment variables, and if that's not set defaults to any of %s, but none of them could be found", strings.Join(editorNames, ", "))
+	return "", fmt.Errorf(SopsEditorErr, strings.Join(editorNames, ", "))
 }
 
 func editExample(opts editExampleOpts) ([]byte, error) {
 	fileBytes := opts.InputStore.EmitExample()
 	branches, err := opts.InputStore.LoadPlainFile(fileBytes)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("Error unmarshalling file: %s", err), codes.CouldNotReadInputFile)
+		return nil, fmt.Errorf(SopsUnmarshalErr, err)
 	}
 	path, err := filepath.Abs(opts.InputPath)
 	if err != nil {
@@ -371,9 +329,9 @@ func editExample(opts editExampleOpts) ([]byte, error) {
 	}
 
 	// Generate a data key
-	dataKey, errs := tree.GenerateDataKeyWithKeyServices(opts.KeyServices)
+	dataKey, errs := tree.GenerateDataKeyWithKeyServices(keyservices())
 	if len(errs) > 0 {
-		return nil, common.NewExitError(fmt.Sprintf("Error encrypting the data key with one or more master keys: %s", errs), codes.CouldNotRetrieveKey)
+		return nil, fmt.Errorf(SopsEncryptErr, errs)
 	}
 
 	return editTree(opts.editOpts, &tree, dataKey)
@@ -385,8 +343,8 @@ func edit(opts editOpts) ([]byte, error) {
 		Cipher:      opts.Cipher,
 		InputStore:  opts.InputStore,
 		InputPath:   opts.InputPath,
-		IgnoreMAC:   opts.IgnoreMAC,
-		KeyServices: opts.KeyServices,
+		IgnoreMAC:   false,
+		KeyServices: keyservices(),
 	})
 	if err != nil {
 		return nil, err
@@ -394,10 +352,10 @@ func edit(opts editOpts) ([]byte, error) {
 	// Decrypt the file
 	dataKey, err := common.DecryptTree(common.DecryptTreeOpts{
 		Cipher:          opts.Cipher,
-		IgnoreMac:       opts.IgnoreMAC,
+		IgnoreMac:       false,
 		Tree:            tree,
-		KeyServices:     opts.KeyServices,
-		DecryptionOrder: opts.DecryptionOrder,
+		KeyServices:     keyservices(),
+		DecryptionOrder: sops.DefaultDecryptionOrder,
 	})
 	if err != nil {
 		return nil, err
@@ -410,7 +368,7 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 	// Create temporary file for editing
 	tmpdir, err := os.MkdirTemp("", "")
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("could not create temporary directory: %s", err), codes.CouldNotWriteOutputFile)
+		return nil, fmt.Errorf(SopsCreateDirErr, err)
 	}
 	defer func() {
 		_ = os.RemoveAll(tmpdir)
@@ -418,7 +376,7 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 
 	tmpfile, err := os.Create(filepath.Join(tmpdir, filepath.Base(opts.InputPath)))
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("could not create temporary file: %s", err), codes.CouldNotWriteOutputFile)
+		return nil, fmt.Errorf(SopsCreateFileErr, err)
 	}
 	// Ensure that in any case, the temporary file is always closed.
 	defer func() {
@@ -428,24 +386,19 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 	tmpfileName := tmpfile.Name()
 
 	// Write to temporary file
-	var out []byte
-	if opts.ShowMasterKeys {
-		out, err = opts.OutputStore.EmitEncryptedFile(*tree)
-	} else {
-		out, err = opts.OutputStore.EmitPlainFile(tree.Branches)
-	}
+	out, err := opts.OutputStore.EmitPlainFile(tree.Branches)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("could not marshal tree: %s", err), codes.ErrorDumpingTree)
+		return nil, fmt.Errorf(SopsMarshalTreeErr, err)
 	}
 	_, err = tmpfile.Write(out)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("could not write output file: %s", err), codes.CouldNotWriteOutputFile)
+		return nil, fmt.Errorf(SopsWriteErr, err)
 	}
 
 	// Compute file hash to detect if the file has been edited
 	origHash, err := hashFile(tmpfileName)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("could not hash file: %s", err), codes.CouldNotReadInputFile)
+		return nil, fmt.Errorf(SopsHashErr, err)
 	}
 
 	// Close the temporary file, so that an editor can open it.
@@ -458,8 +411,11 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 
 	// Let the user edit the file
 	err = runEditorUntilOk(runEditorUntilOkOpts{
-		InputStore: opts.InputStore, OriginalHash: origHash, TmpFileName: tmpfileName,
-		ShowMasterKeys: opts.ShowMasterKeys, Tree: tree})
+		InputStore:   opts.InputStore,
+		OriginalHash: origHash,
+		TmpFileName:  tmpfileName,
+		Tree:         tree,
+	})
 	if err != nil {
 		return nil, err
 	}
@@ -475,67 +431,19 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 	// Output the file
 	encryptedFile, err := opts.OutputStore.EmitEncryptedFile(*tree)
 	if err != nil {
-		return nil, common.NewExitError(fmt.Sprintf("could not marshal tree: %s", err), codes.ErrorDumpingTree)
+		return nil, fmt.Errorf(SopsMarshalTreeErr, err)
 	}
 	return encryptedFile, nil
 }
 
-func keyservices() (svcs []keyservice.KeyServiceClient) {
-	svcs = append(svcs, keyservice.NewLocalClient())
-	return
+func keyservices() []keyservice.KeyServiceClient {
+	return []keyservice.KeyServiceClient{
+		keyservice.NewLocalClient(),
+	}
 }
 
-func loadStoresConfig() (*config.StoresConfig, error) {
-	return config.NewStoresConfig(), nil
-
-	// configPath := context.GlobalString("config")
-	// if configPath == "" {
-	// 	// Ignore config not found errors returned from findConfigFile since the config file is not mandatory
-	// 	foundPath, err := findConfigFile()
-	// 	if err != nil {
-	// 		return config.NewStoresConfig(), nil
-	// 	}
-	// 	configPath = foundPath
-	// }
-	// return config.LoadStoresConfig(configPath)
-}
-
-func inputStore(path string) (common.Store, error) {
-	storesConf, err := loadStoresConfig()
-	if err != nil {
-		return nil, err
-	}
-	return common.DefaultStoreForPathOrFormat(storesConf, path, ""), nil
-}
-
-func outputStore(path string) (common.Store, error) {
-	storesConf, err := loadStoresConfig()
-	if err != nil {
-		return nil, err
-	}
-	// if context.IsSet("indent") {
-	// 	indent := context.Int("indent")
-	// 	storesConf.YAML.Indent = indent
-	// 	storesConf.JSON.Indent = indent
-	// 	storesConf.JSONBinary.Indent = indent
-	// }
-
-	return common.DefaultStoreForPathOrFormat(storesConf, path, ""), nil
-}
-
-func decryptionOrder(decryptionOrder string) ([]string, error) {
-	if decryptionOrder == "" {
-		return sops.DefaultDecryptionOrder, nil
-	}
-	orderList := strings.Split(decryptionOrder, ",")
-	unique := make(map[string]struct{})
-	for _, v := range orderList {
-		if _, ok := unique[v]; ok {
-			return nil, common.NewExitError(fmt.Sprintf("Duplicate decryption key type: %s", v), codes.DuplicateDecryptionKeyType)
-		}
-		unique[v] = struct{}{}
-	}
-	return orderList, nil
+func defaultStore(path string) common.Store {
+	return common.DefaultStoreForPathOrFormat(config.NewStoresConfig(), path, "")
 }
 
 func SopsViewFile(cfg *KobraConfig, file string) error {
@@ -580,33 +488,14 @@ func SopsEditFile(cfg *KobraConfig, file string) error {
 		return err
 	}
 
-	inputStore, err := inputStore(fileName)
-	if err != nil {
-		return err
-	}
-	outputStore, err := outputStore(fileName)
-	if err != nil {
-		return err
-	}
-	svcs := keyservices()
-
-	order, err := decryptionOrder("")
-	if err != nil {
-		return err
-	}
-
 	var output []byte
 	_, statErr := os.Stat(fileName)
 	fileExists := statErr == nil
 	opts := editOpts{
-		OutputStore:     outputStore,
-		InputStore:      inputStore,
-		InputPath:       fileName,
-		Cipher:          aes.NewCipher(),
-		KeyServices:     svcs,
-		DecryptionOrder: order,
-		IgnoreMAC:       false,
-		ShowMasterKeys:  false,
+		OutputStore: defaultStore(fileName),
+		InputStore:  defaultStore(fileName),
+		InputPath:   fileName,
+		Cipher:      aes.NewCipher(),
 	}
 	if fileExists {
 		output, err = edit(opts)
@@ -632,7 +521,7 @@ func SopsEditFile(cfg *KobraConfig, file string) error {
 	// executed to avoid truncating it when there's errors
 	f, err := os.Create(fileName)
 	if err != nil {
-		return common.NewExitError(fmt.Sprintf("could not open in-place file for writing: %s", err), codes.CouldNotWriteOutputFile)
+		return fmt.Errorf(SopsInPlaceErr, err)
 	}
 	defer func() {
 		_ = f.Close()
@@ -661,27 +550,15 @@ func SopsEncryptFile(cfg *KobraConfig, file string) error {
 		return err
 	}
 
-	inputStore, err := inputStore(fileName)
-	if err != nil {
-		return err
-	}
-	outputStore, err := outputStore(fileName)
-	if err != nil {
-		return err
-	}
-	svcs := keyservices()
-
 	encConfig, err := getEncryptConfig(fileName)
 	if err != nil {
 		return err
 	}
 	output, err := encrypt(encryptOpts{
-		OutputStore:   outputStore,
-		InputStore:    inputStore,
+		OutputStore:   defaultStore(fileName),
+		InputStore:    defaultStore(fileName),
 		InputPath:     fileName,
-		ReadFromStdin: false,
 		Cipher:        aes.NewCipher(),
-		KeyServices:   svcs,
 		encryptConfig: encConfig,
 	})
 
@@ -693,7 +570,7 @@ func SopsEncryptFile(cfg *KobraConfig, file string) error {
 	// executed to avoid truncating it when there's errors
 	f, err := os.Create(fileName)
 	if err != nil {
-		return common.NewExitError(fmt.Sprintf("could not open in-place file for writing: %s", err), codes.CouldNotWriteOutputFile)
+		return fmt.Errorf(SopsInPlaceErr, err)
 	}
 	defer func() {
 		_ = f.Close()

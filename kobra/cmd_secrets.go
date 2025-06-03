@@ -70,6 +70,7 @@ var secretsEncryptCmd = &cobra.Command{
 		cfg := GetConfig()
 		err := RunSecretsEncrypt(&cfg, args[0])
 		if err != nil {
+			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
 		}
 	},
@@ -84,6 +85,7 @@ var secretsEditCmd = &cobra.Command{
 		cfg := GetConfig()
 		err := RunSecretsEdit(&cfg, args[0])
 		if err != nil {
+			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
 		}
 	},
