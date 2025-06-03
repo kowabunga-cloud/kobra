@@ -11,6 +11,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	"filippo.io/age"
@@ -143,38 +144,6 @@ func GetSecrets(ptfCfg *PlatformConfig) (*KobraSecretData, error) {
 	return secrets, nil
 }
 
-func secretsSopsCmd(cfg *KobraConfig, file string, params ...string) error {
-	// read platform configuration
-	ptfCfg, err := GetPlatformConfig()
-	if err != nil {
-		return KobraError("%s", err.Error())
-	}
-
-	secrets, err := GetSecrets(ptfCfg)
-	if err != nil {
-		return err
-	}
-
-	// set environment variables
-	envs, sops, err := setSopsEnv(secrets)
-	if err != nil {
-		return err
-	}
-	if sops != "" {
-		defer func() {
-			_ = os.Remove(sops)
-		}()
-	}
-
-	// set command-line arguments
-	args := []string{}
-	args = append(args, params...)
-	args = append(args, file)
-
-	sopsBin := LookupPluginBinary(SopsBin)
-	return BinExec(sopsBin, "", args, envs)
-}
-
 func masterKeyEncode(data *KobraSecretData) string {
 	secrets, err := json.Marshal(data)
 	if err != nil {
@@ -267,16 +236,45 @@ func RunSecretsInit(cfg *KobraConfig) error {
 	return nil
 }
 
+func secretsSopsSetEnv() (string, error) {
+	// read platform configuration
+	ptfCfg, err := GetPlatformConfig()
+	if err != nil {
+		return "", err
+	}
+
+	secrets, err := GetSecrets(ptfCfg)
+	if err != nil {
+		return "", err
+	}
+
+	// set environment variables
+	envs, sops, err := setSopsEnv(secrets)
+	if err != nil {
+		return "", err
+	}
+
+	for _, e := range envs {
+		s := strings.Split(e, "=")
+		err := os.Setenv(s[0], s[1])
+		if err != nil {
+			return "", err
+		}
+	}
+
+	return sops, nil
+}
+
 func RunSecretsEncrypt(cfg *KobraConfig, file string) error {
-	return secretsSopsCmd(cfg, file, "-e", "-i")
+	return SopsEncryptFile(cfg, file)
 }
 
 func RunSecretsEdit(cfg *KobraConfig, file string) error {
-	return secretsSopsCmd(cfg, file)
+	return SopsEditFile(cfg, file)
 }
 
 func RunSecretsView(cfg *KobraConfig, file string) error {
-	return secretsSopsCmd(cfg, file, "-d")
+	return SopsViewFile(cfg, file)
 }
 
 func RunSecretsGet(cfg *KobraConfig) error {

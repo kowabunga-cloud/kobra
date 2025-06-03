@@ -98,6 +98,7 @@ var secretsViewCmd = &cobra.Command{
 		cfg := GetConfig()
 		err := RunSecretsView(&cfg, args[0])
 		if err != nil {
+			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
 		}
 	},
