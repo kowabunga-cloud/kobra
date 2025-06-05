@@ -13,6 +13,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"maps"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -20,9 +21,11 @@ import (
 	"slices"
 	"strings"
 	"syscall"
+	"unicode"
 
 	"github.com/codeclysm/extract/v4"
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/oriser/regroup"
 )
 
 const (
@@ -40,12 +43,20 @@ const (
 	ToolchainToolTF       = "tf"
 	ToolchainToolHelm     = "helm"
 	ToolchainToolHelmfile = "helmfile"
+	ToolchainToolAnsible  = "ansible"
+
+	PythonBin = "python3"
+	PipBin    = "pip3"
 )
 
 type GitHubRelease struct {
 	Tag        string `json:"tag_name"`
 	Draft      bool   `json:"draft"`
 	PreRelease bool   `json:"prerelease"`
+}
+
+type PypiSimpleManifest struct {
+	Releases []string `json:"versions"`
 }
 
 type ThirdPartyTool struct {
@@ -55,8 +66,8 @@ type ThirdPartyTool struct {
 	SourceURI  string
 	Binaries   []string
 	BinaryName string
-	IsTarball  bool
-	IsZipped   bool
+	PypiRepo   string
+	PipAddOns  map[string]string
 }
 
 var toolchainTools = map[string]ThirdPartyTool{
@@ -65,28 +76,38 @@ var toolchainTools = map[string]ThirdPartyTool{
 		GitHubRepo: "hashicorp/terraform",
 		SourceURI:  "https://releases.hashicorp.com/terraform/{VERSION}/terraform_{VERSION}_{OS}_{ARCH}.zip",
 		Binaries:   []string{TerraformBin},
-		IsZipped:   true,
 	},
 	OpenTofuBin: ThirdPartyTool{
 		Name:       "OpenTofu",
 		GitHubRepo: "opentofu/opentofu",
 		SourceURI:  "https://github.com/opentofu/opentofu/releases/download/v{VERSION}/tofu_{VERSION}_{OS}_{ARCH}.zip",
 		Binaries:   []string{OpenTofuBin},
-		IsZipped:   true,
 	},
 	HelmBin: ThirdPartyTool{
 		Name:       "Helm",
 		GitHubRepo: "helm/helm",
 		SourceURI:  "https://get.helm.sh/helm-v{VERSION}-{OS}-{ARCH}.tar.gz",
 		Binaries:   []string{fmt.Sprintf("%s-%s/%s", runtime.GOOS, runtime.GOARCH, HelmBin)},
-		IsTarball:  true,
 	},
 	HelmfileBin: ThirdPartyTool{
 		Name:       "Helmfile",
 		GitHubRepo: "helmfile/helmfile",
 		SourceURI:  "https://github.com/helmfile/helmfile/releases/download/v{VERSION}/helmfile_{VERSION}_{OS}_{ARCH}.tar.gz",
 		Binaries:   []string{HelmfileBin},
-		IsTarball:  true,
+	},
+	AnsibleBin: ThirdPartyTool{
+		Name:     "Ansible",
+		PypiRepo: "ansible",
+		PipAddOns: map[string]string{
+			"jmespath":   ToolchainVersionLatest,
+			"boto3":      ToolchainVersionLatest,
+			"botocore":   ToolchainVersionLatest,
+			"kubernetes": ToolchainVersionLatest,
+			"netaddr":    ToolchainVersionLatest,
+			"jsonpatch":  ToolchainVersionLatest,
+			"PyYAML":     ToolchainVersionLatest,
+			"pypsrp":     ToolchainVersionLatest,
+		},
 	},
 }
 
@@ -431,6 +452,182 @@ func (tp *ThirdPartyTool) Download() (string, error) {
 	return tmpDst.Name(), nil
 }
 
+func (tp *ThirdPartyTool) PipInstall(venvDir string) error {
+	klog.Infof("Installing Python's %s %s ...", tp.Name, tp.Version)
+	err := pipInstallPkg(venvDir, tp.PypiRepo, tp.Version)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (tp *ThirdPartyTool) PipCheckAndInstall(venvDir, requestedVersion string) error {
+	pkgVersion, err := findPythonPkgVersion(venvDir, tp.PypiRepo)
+	if err != nil {
+		return err
+	}
+
+	if pkgVersion != requestedVersion {
+		errVersion := findPlatformPythonPkgVersion(tp, pkgVersion, requestedVersion)
+		if errVersion != nil {
+			return errVersion
+		}
+
+		if pkgVersion != tp.Version {
+			errExtract := tp.PipInstall(venvDir)
+			if errExtract != nil {
+				return errExtract
+			}
+		}
+	}
+
+	return nil
+}
+
+func findPythonPkgVersion(venvDir, pkg string) (string, error) {
+	var version string
+	err := filepath.Walk(fmt.Sprintf("%s/lib", venvDir),
+		func(path string, info os.FileInfo, err error) error {
+			if !info.IsDir() {
+				return nil
+			}
+
+			base := filepath.Base(path)
+			if strings.HasPrefix(base, fmt.Sprintf("%s-", pkg)) &&
+				strings.HasSuffix(base, ".dist-info") {
+				r := regroup.MustCompile(fmt.Sprintf(`%s-(?P<Version>.*)\.dist-info`, pkg))
+				matches, errReg := r.Groups(base)
+				if errReg != nil {
+					return errReg
+				}
+
+				if version == "" {
+					version = matches["Version"]
+				}
+			}
+			return nil
+		})
+	klog.Debugf("Found Python package %s version %s in toolchain", pkg, version)
+	return version, err
+}
+
+func createPythonVirtualEnv(dst string) error {
+	// check for previous existence
+	_, err := LookupPlatformBinary(PipBin)
+	if err != nil {
+		// it doesn't, let's create it
+		python, err := LookupSystemBinary(PythonBin)
+		if err != nil {
+			return err
+		}
+
+		args := []string{
+			"-m",
+			"venv",
+			dst,
+		}
+
+		klog.Infof("Creating Python3 virtual environment ...")
+		return BinExec(python, "", args, []string{})
+	}
+
+	return nil
+}
+
+func pipInstallPkg(dst, pkg, version string) error {
+	pip, err := LookupPlatformBinary(PipBin)
+	if err != nil {
+		return err
+	}
+
+	pkgVersion := pkg
+	if version != "" {
+		pkgVersion = fmt.Sprintf("%s==%s", pkg, version)
+	}
+	args := []string{
+		"install",
+		pkgVersion,
+	}
+
+	out, err := BinExecOut(pip, "", args, []string{})
+	if err != nil {
+		return err
+	}
+
+	klog.Debug(out)
+	return nil
+}
+
+func hasLetter(s string) bool {
+	return strings.ContainsFunc(s, func(r rune) bool {
+		return unicode.IsLetter(r)
+	})
+}
+
+func findPlatformPythonPkgVersion(tp *ThirdPartyTool, currentVersion, requestedVersion string) error {
+	pkgUri := fmt.Sprintf("https://pypi.org/simple/%s/", tp.PypiRepo)
+
+	client := &http.Client{}
+	req, errGet := http.NewRequest("GET", pkgUri, nil)
+	if errGet != nil {
+		return KobraError("%s", errGet.Error())
+	}
+
+	req.Header.Add("Accept", "application/vnd.pypi.simple.v1+json")
+	resp, errGet := client.Do(req)
+	if errGet != nil {
+		return KobraError("%s", errGet.Error())
+	}
+
+	body, errGet := io.ReadAll(resp.Body)
+	if errGet != nil {
+		return KobraError("%s", errGet.Error())
+	}
+
+	var manifest PypiSimpleManifest
+	_ = json.Unmarshal(body, &manifest)
+
+	if requestedVersion != ToolchainVersionLatest {
+		// explicit version request
+		found := false
+		for _, r := range manifest.Releases {
+			if r == requestedVersion {
+				tp.Version = requestedVersion
+				found = true
+				continue
+			}
+		}
+		if !found {
+			return fmt.Errorf("unable to find version %s for %s", requestedVersion, tp.Name)
+		}
+	} else {
+		// find latest stable release
+		releaseVersions := []string{}
+		for _, r := range manifest.Releases {
+			blacklistedKeywords := []string{"dev", "rc"}
+			for _, k := range blacklistedKeywords {
+				if strings.Contains(r, k) {
+					continue
+				}
+			}
+
+			if hasLetter(r) {
+				continue
+			}
+
+			releaseVersions = append(releaseVersions, r)
+		}
+		if len(releaseVersions) == 0 {
+			return fmt.Errorf("unable to find latest stable release for %s", tp.Name)
+		}
+
+		tp.Version = releaseVersions[len(releaseVersions)-1]
+	}
+
+	return nil
+}
+
 func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVersion string) error {
 	releaseUri := fmt.Sprintf("https://api.github.com/repos/%s/releases", tp.GitHubRepo)
 	resp, errGet := http.Get(releaseUri)
@@ -584,6 +781,39 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 					if errExtract != nil {
 						return errExtract
 					}
+				}
+			}
+		case ToolchainToolAnsible:
+			venvDir, err := LookupPlatformConfigDir()
+			if err != nil {
+				return err
+			}
+
+			err = createPythonVirtualEnv(venvDir)
+			if err != nil {
+				return err
+			}
+
+			tp := toolchainTools[AnsibleBin]
+			err = tp.PipCheckAndInstall(venvDir, cfg.Toolchain.Ansible.Version)
+			if err != nil {
+				return err
+			}
+
+			// install extra packages
+			addOns := map[string]string{}
+			maps.Insert(addOns, maps.All(tp.PipAddOns))
+			maps.Insert(addOns, maps.All(cfg.Toolchain.Ansible.Packages)) // local overrides, if any
+
+			for pkg, version := range addOns {
+				pipTp := ThirdPartyTool{
+					Name:     pkg,
+					PypiRepo: pkg,
+				}
+
+				err := pipTp.PipCheckAndInstall(venvDir, version)
+				if err != nil {
+					return err
 				}
 			}
 		}

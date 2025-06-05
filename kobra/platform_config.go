@@ -19,6 +19,7 @@ import (
 type PlatformConfig struct {
 	Git       PlatformConfigGit       `yaml:"git,omitempty"`
 	Secrets   PlatformConfigSecrets   `yaml:"secrets"`
+	SSH       PlatformConfigSSH       `yaml:"ssh,omitempty"`
 	Toolchain PlatformConfigToolchain `yaml:"toolchain"`
 }
 
@@ -53,6 +54,18 @@ type PlatformConfigSecrets struct {
 	HCP         PlatformConfigSecretsHCP  `yaml:"hcp,omitempty"`
 }
 
+// PlatformConfigSSH contains ssh-specific configuration
+type PlatformConfigSSH struct {
+	Remote    PlatformConfigSshConfig `yaml:"remote,omitempty"`
+	Bootstrap PlatformConfigSshConfig `yaml:"bootstrap,omitempty"`
+}
+
+// PlatformConfigSshConfig contains ssh-specific configuration
+type PlatformConfigSshConfig struct {
+	User    string `yaml:"user"`
+	KeyFile string `yaml:"key_file"`
+}
+
 // PlatformConfigSecretsAWS contains AWS Secrets Manager secrets-specific configuration
 type PlatformConfigSecretsAWS struct {
 	Region  string `yaml:"region"`
@@ -81,6 +94,7 @@ type PlatformConfigToolchain struct {
 	TF        PlatformConfigToolchainTF       `yaml:"tf,omitempty"`
 	Helm      PlatformConfigToolchainHelm     `yaml:"helm,omitempty"`
 	Helmfile  PlatformConfigToolchainHelmfile `yaml:"helmfile,omitempty"`
+	Ansible   PlatformConfigToolchainAnsible  `yaml:"ansible,omitempty"`
 }
 
 // PlatformConfigToolchainTF contains tf-specific configuration
@@ -97,6 +111,12 @@ type PlatformConfigToolchainHelm struct {
 // PlatformConfigToolchainHelmfile contains helmfile-specific configuration
 type PlatformConfigToolchainHelmfile struct {
 	Version string `yaml:"version,omitempty"`
+}
+
+// PlatformConfigToolchainAnsible contains ansible-specific configuration
+type PlatformConfigToolchainAnsible struct {
+	Version  string            `yaml:"version,omitempty"`
+	Packages map[string]string `yaml:"packages,omitempty"`
 }
 
 const (
@@ -224,6 +244,7 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helm.Version, "Helm Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helmfile.Version, "Helmfile Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.Ansible.Version, "Ansible Version", ToolchainVersionLatest)
 
 	// check for valid configuration
 	err = cfg.IsValid()

@@ -56,6 +56,13 @@ secrets:
   hcp:                                # optional, hcp-provider specific
     endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
   master_key_id: string
+ssh:                                  # optional
+  remote:                             # remote servers SSH connection parameters
+    user: string                      # username to be used
+    key_file: string                  # path to associated SSH private key file
+  bootstrap:                          # optional, remote servers SSH connection parameters for first-deployment
+    user: string                      # username to be used
+    key_file: string                  # path to associated SSH private key file
 toolchain:                            # optional
   use_system: bool                    # optional, 'false' if unspecified
   tf:                                 # optional
@@ -65,6 +72,11 @@ toolchain:                            # optional
     version: string                   # optional, 'latest' if unspecified
   helmfile:                           # optional
     version: string                   # optional, 'latest' if unspecified
+  ansible:                            # optional
+    version: string                   # optional, 'latest' if unspecified
+    packages:                         # optional, list of extra Python packages from PyPI to be added to toolchain
+      freename: version               # key/value tuple with key being PyPI package name
+                                      # and value being package version (use 'latest' if unpinned).
 ```
 
 ## Secrets Management

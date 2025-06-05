@@ -85,6 +85,21 @@ func LookupPlatformDir() (string, error) {
 	return wd, nil
 }
 
+func LookupPlatformConfigDir() (string, error) {
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		return "", KobraError("%s", err.Error())
+	}
+
+	cfgDir := fmt.Sprintf("%s/%s", ptfDir, KobraConfigDir)
+	err = os.MkdirAll(cfgDir, 0750)
+	if err != nil && !os.IsExist(err) {
+		return "", err
+	}
+
+	return cfgDir, nil
+}
+
 func LookupPlatformBinDir() (string, error) {
 	ptfDir, err := LookupPlatformDir()
 	if err != nil {
@@ -104,6 +119,29 @@ func LookupPlatformBinDir() (string, error) {
 	}
 
 	return binDir, nil
+}
+
+func LookupAnsibleDir() (string, error) {
+	var ansibleDir string
+
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		return ansibleDir, err
+	}
+
+	// where are we again ?
+	wd, err := os.Getwd()
+	if err != nil {
+		return ansibleDir, err
+	}
+
+	// we're already in 'ansible' subdirectory
+	if strings.Contains(filepath.Dir(wd), AnsibleDirName) && filepath.Base(wd) != AnsibleDirName {
+		return wd, nil
+	}
+
+	// otherwise, let's use default path
+	return fmt.Sprintf("%s/%s", ptfDir, AnsibleDirName), nil
 }
 
 func LookupHelmfileDir() (string, error) {
