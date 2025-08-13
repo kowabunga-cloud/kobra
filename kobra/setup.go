@@ -515,7 +515,7 @@ func findPythonPkgVersion(venvDir, pkg string) (string, error) {
 func createPythonVirtualEnv(dst string) error {
 	// check for previous existence
 	_, err := LookupPlatformBinary(PipBin)
-	if err != nil {
+	if err == nil {
 		// it doesn't, let's create it
 		python, err := LookupSystemBinary(PythonBin)
 		if err != nil {
