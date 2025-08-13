@@ -7,3 +7,4 @@ master_key.txt
 terraform/
 ansible/
 helmfile/
+.kobra.d/
