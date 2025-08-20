@@ -61,6 +61,7 @@ var tfCmd = &cobra.Command{
 }
 
 func NewTfSubCommand(name, desc string) *cobra.Command {
+	var toolchainUpdate bool
 	var tfModule string
 	var tfResource string
 	var tfOutput string
@@ -72,13 +73,14 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := GetConfig()
-			err := RunTF(&cfg, name, tfModule, tfResource, tfOutput, tfAuto, tfYes, args)
+			err := RunTF(&cfg, toolchainUpdate, name, tfModule, tfResource, tfOutput, tfAuto, tfYes, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, cmdTfError)
 			}
 		},
 	}
 
+	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
 	sub.Flags().BoolVarP(&tfYes, "yes", "y", false, tfYesDesc)
 
 	if slices.Contains([]string{cmdTfApply, cmdTfDestroy, cmdTfPlan}, name) {

@@ -462,7 +462,7 @@ func (tp *ThirdPartyTool) PipInstall(venvDir string) error {
 	return nil
 }
 
-func (tp *ThirdPartyTool) PipCheckAndInstall(venvDir, requestedVersion string) error {
+func (tp *ThirdPartyTool) PipCheckAndInstall(venvDir, requestedVersion string, update bool) error {
 	pkgVersion, err := findPythonPkgVersion(venvDir, tp.PypiRepo)
 	if err != nil {
 		return err
@@ -512,10 +512,10 @@ func findPythonPkgVersion(venvDir, pkg string) (string, error) {
 	return version, err
 }
 
-func createPythonVirtualEnv(dst string) error {
+func createPythonVirtualEnv(dst string, update bool) error {
 	// check for previous existence
 	_, err := LookupPlatformBinary(PipBin)
-	if err == nil {
+	if err != nil || update {
 		// it doesn't, let's create it
 		python, err := LookupSystemBinary(PythonBin)
 		if err != nil {
@@ -679,7 +679,7 @@ func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVers
 	return nil
 }
 
-func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
+func SetupPlatformToolchain(cfg *PlatformConfig, update bool, tools ...string) error {
 	if cfg.Toolchain.UseSystem {
 		return nil
 	}
@@ -715,7 +715,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 			}
 
 			requestedVersion := cfg.Toolchain.TF.Version
-			if err != nil || currentVersion != requestedVersion {
+			if err != nil || (update && currentVersion != requestedVersion) {
 				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
 				if errVersion != nil {
 					return errVersion
@@ -743,7 +743,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 			}
 
 			requestedVersion := cfg.Toolchain.Helm.Version
-			if err != nil || currentVersion != requestedVersion {
+			if err != nil || (update && currentVersion != requestedVersion) {
 				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
 				if errVersion != nil {
 					return errVersion
@@ -770,7 +770,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 			}
 
 			requestedVersion := cfg.Toolchain.Helmfile.Version
-			if err != nil || currentVersion != requestedVersion {
+			if err != nil || (update && currentVersion != requestedVersion) {
 				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
 				if errVersion != nil {
 					return errVersion
@@ -789,13 +789,13 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 				return err
 			}
 
-			err = createPythonVirtualEnv(venvDir)
+			err = createPythonVirtualEnv(venvDir, update)
 			if err != nil {
 				return err
 			}
 
 			tp := toolchainTools[AnsibleBin]
-			err = tp.PipCheckAndInstall(venvDir, cfg.Toolchain.Ansible.Version)
+			err = tp.PipCheckAndInstall(venvDir, cfg.Toolchain.Ansible.Version, update)
 			if err != nil {
 				return err
 			}
@@ -811,7 +811,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, tools ...string) error {
 					PypiRepo: pkg,
 				}
 
-				err := pipTp.PipCheckAndInstall(venvDir, version)
+				err := pipTp.PipCheckAndInstall(venvDir, version, update)
 				if err != nil {
 					return err
 				}

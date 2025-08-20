@@ -61,6 +61,7 @@ var hfCmd = &cobra.Command{
 }
 
 func NewHfSubCommand(name, desc string) *cobra.Command {
+	var toolchainUpdate bool
 	var hfVerbose bool
 	var hfYes bool
 	var hfRelease string
@@ -70,13 +71,14 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := GetConfig()
-			err := RunHelmfile(&cfg, name, hfVerbose, hfYes, hfRelease, args)
+			err := RunHelmfile(&cfg, toolchainUpdate, name, hfVerbose, hfYes, hfRelease, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, fmt.Sprintf("%s %s", cmdHfError, name))
 			}
 		},
 	}
 
+	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
 	sub.Flags().BoolVarP(&hfVerbose, "verbose", "v", false, hfVerboseDesc)
 	sub.Flags().BoolVarP(&hfYes, "yes", "y", false, hfYesDesc)
 	sub.Flags().StringVarP(&hfRelease, "release", "r", "", hfReleaseDesc)

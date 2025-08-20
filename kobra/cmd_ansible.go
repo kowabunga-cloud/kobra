@@ -58,6 +58,7 @@ var ansiblePullCmd = &cobra.Command{
 }
 
 func NewAnsibleDeploySubCommand() *cobra.Command {
+	var toolchainUpdate bool
 	var deployPlaybook string
 	var deployUpgrade bool
 	var deployCheck bool
@@ -75,7 +76,7 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 		Short: cmdAnsibleDeployDesc,
 		Run: func(cmd *cobra.Command, args []string) {
 			cfg := GetConfig()
-			err := RunAnsible(&cfg, deployPlaybook, deployUpgrade, deployCheck, deployBootstrap, deployListTags, deployTags, deploySkipTags, deployExtraVars, deployLimit, deployVerbose, deployYes, args)
+			err := RunAnsible(&cfg, toolchainUpdate, deployPlaybook, deployUpgrade, deployCheck, deployBootstrap, deployListTags, deployTags, deploySkipTags, deployExtraVars, deployLimit, deployVerbose, deployYes, args)
 			if err != nil {
 				klog.Errorf("error: %s", err)
 				klog.Fatalf(cmdFailureStatus, cmdAnsibleError)
@@ -93,6 +94,7 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 		klog.Error(err)
 	}
 
+	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
 	sub.Flags().BoolVarP(&deployUpgrade, "upgrade", "u", false, cmdAnsibleDeployUpgradeDesc)
 	sub.Flags().BoolVarP(&deployCheck, "check", "c", false, cmdAnsibleDeployCheckDesc)
 	sub.Flags().BoolVarP(&deployBootstrap, "bootstrap", "b", false, cmdAnsibleDeployBootstrapDesc)

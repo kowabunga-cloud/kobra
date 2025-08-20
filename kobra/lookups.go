@@ -233,5 +233,12 @@ func LookupPlatformBinary(binName string) (string, error) {
 		return "", err
 	}
 
-	return fmt.Sprintf("%s/%s", dir, binName), nil
+	bin := fmt.Sprintf("%s/%s", dir, binName)
+
+	_, err = os.Stat(bin)
+	if err != nil {
+		return bin, err
+	}
+
+	return bin, nil
 }

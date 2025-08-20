@@ -324,7 +324,7 @@ func runPlaybook(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, i
 	return BinExec(bin, ansibleDir, args, envs)
 }
 
-func RunAnsible(cfg *KobraConfig, playbook string, upgrade, check, bootstrap, listTags bool, tags, skip_tags, extraVars, limit string, verbose, bypass bool, freeArgs []string) error {
+func RunAnsible(cfg *KobraConfig, toolchainUpdate bool, playbook string, upgrade, check, bootstrap, listTags bool, tags, skip_tags, extraVars, limit string, verbose, bypass bool, freeArgs []string) error {
 	// get Ansible dir
 	ansibleDir, err := LookupAnsibleDir()
 	if err != nil {
@@ -338,7 +338,7 @@ func RunAnsible(cfg *KobraConfig, playbook string, upgrade, check, bootstrap, li
 	}
 
 	// setup toolchain, if needed
-	err = SetupPlatformToolchain(ptfCfg, ToolchainToolAnsible)
+	err = SetupPlatformToolchain(ptfCfg, toolchainUpdate, ToolchainToolAnsible)
 	if err != nil {
 		return err
 	}
@@ -399,7 +399,7 @@ func RunAnsiblePull(cfg *KobraConfig) error {
 	}
 
 	// setup toolchain, if needed
-	err = SetupPlatformToolchain(ptfCfg, ToolchainToolAnsible)
+	err = SetupPlatformToolchain(ptfCfg, false, ToolchainToolAnsible)
 	if err != nil {
 		return err
 	}

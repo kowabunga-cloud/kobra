@@ -15,6 +15,8 @@ import (
 )
 
 const (
+	cmdToolchainUpdateDesc = "Check for toolchain update before run"
+
 	cmdFailureStatus = "Something went terribly wrong, unable to run %s or execution came as error !"
 )
 
