@@ -1,0 +1,16 @@
+#!/usr/bin/make -f
+
+# Uncomment this to turn on verbose mode.
+#export DH_VERBOSE=1
+#export DH_OPTIONS=-v
+
+PACKAGE = $(shell dh_listpackages)
+
+%:
+	dh  $@
+
+.PHONY: override_dh_auto_test
+override_dh_auto_test:
+
+.PHONY: override_dh_auto_build
+override_dh_auto_build:

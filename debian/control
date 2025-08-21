@@ -1,0 +1,15 @@
+Source: kobra
+Section: web
+Priority: extra
+Maintainer: The Kowabunga Project <maintainers@kowabunga.cloud>
+Uploaders: The Kowabunga Project <maintainers@kowabunga.cloud>
+Build-Depends: debhelper
+Standards-Version: 3.9.2
+
+Package: kobra
+Architecture: all
+Depends: ${misc:Depends}
+Description: Kobra DevOps deployment swiss-army knife utility.
+  Kobra is a DevOps deployment swiss-army knife utility.
+  It provides a convenient wrapper over OpenTofu, Ansible and Helmfile with proper secrets management,
+  removing the hassle of complex deployment strategy.
