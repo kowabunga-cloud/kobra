@@ -630,7 +630,7 @@ func findPlatformPythonPkgVersion(tp *ThirdPartyTool, currentVersion, requestedV
 
 func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVersion string) error {
 	releaseUri := fmt.Sprintf("https://api.github.com/repos/%s/releases", tp.GitHubRepo)
-	resp, errGet := http.Get(releaseUri)
+	resp, errGet := http.Get(releaseUri) // #nosec G107
 	if errGet != nil {
 		return KobraError("%s", errGet.Error())
 	}
