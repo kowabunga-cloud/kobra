@@ -11,6 +11,7 @@ import (
 	"cmp"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"maps"
@@ -700,7 +701,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, update bool, tools ...string) e
 			tp := toolchainTools[binName]
 
 			binExe, err := LookupPlatformBinary(binName)
-			if err != nil {
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
 				return err
 			}
 
@@ -732,7 +733,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, update bool, tools ...string) e
 			tp := toolchainTools[HelmBin]
 
 			binExe, err := LookupPlatformBinary(HelmBin)
-			if err != nil {
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
 				return err
 			}
 
@@ -760,7 +761,7 @@ func SetupPlatformToolchain(cfg *PlatformConfig, update bool, tools ...string) e
 			tp := toolchainTools[HelmfileBin]
 
 			binExe, err := LookupPlatformBinary(HelmfileBin)
-			if err != nil {
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
 				return err
 			}
 
