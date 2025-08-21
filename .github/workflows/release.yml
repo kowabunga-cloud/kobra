@@ -18,10 +18,10 @@ jobs:
         uses: actions/setup-go@v5
         with:
           go-version: 1.25
-      - name: Get environment variables
-        run: |
-          echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
-          echo "KOBRA_VERSION=$(grep '^VERSION Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+      - name: Get Kobra package name
+        run: echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+      - name: Get Kobra version
+        run: echo "KOBRA_VERSION=$(grep '^VERSION Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
@@ -29,5 +29,5 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ${{ KOBRA_PKG_NAME }}
-          VERSION: ${{ KOBRA_VERSION }}
+          PKG_NAME: ${{ env.KOBRA_PKG_NAME }}
+          VERSION: ${{ env.KOBRA_VERSION }}
