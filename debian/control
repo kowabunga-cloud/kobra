@@ -7,7 +7,7 @@ Build-Depends: debhelper
 Standards-Version: 3.9.2
 
 Package: kobra
-Architecture: all
+Architecture: any
 Depends: ${misc:Depends}
 Description: Kobra DevOps deployment swiss-army knife utility.
   Kobra is a DevOps deployment swiss-army knife utility.
