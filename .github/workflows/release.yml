@@ -32,7 +32,7 @@ jobs:
           PKG_NAME: ${{ env.KOBRA_PKG_NAME }}
           VERSION: ${{ env.KOBRA_VERSION }}
       - name: Retrieve Darwin ARM64 SHA256 checksum
-        run: echo "DARWIN_ARM64_SHA256=$(sha256sum dist/kobra_darwin_amd64_v1/kobra | cut -d ' ' -f 1)" >> $GITHUB_ENV
+        run: echo "DARWIN_ARM64_SHA256=$(sha256sum dist/kobra_darwin_arm64_v8.0/kobra | cut -d ' ' -f 1)" >> $GITHUB_ENV
       - name: Retrieve Darwin AMD64 SHA256 checksum
         run: echo "DARWIN_AMD64_SHA256=$(sha256sum dist/kobra_darwin_amd64_v1/kobra | cut -d ' ' -f 1)" >> $GITHUB_ENV
       - name: Retrieve Linux ARM64 SHA256 checksum

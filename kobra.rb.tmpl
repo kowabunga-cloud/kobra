@@ -1,0 +1,27 @@
+class Kobra < Formula
+  desc "DevOps deployment swiss-army knife utility"
+  homepage "https://github.com/kowabunga-cloud/kobra/"
+  version "${{ env.KOBRA_VERSION }}"
+
+  if OS.mac?
+    if Hardware::CPU.intel?
+      url "https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_amd64.tar.gz"
+      sha256 "${{ env.DARWIN_AMD64_SHA256 }}"
+    elsif Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_arm64.tar.gz"
+      sha256 "${{ env.DARWIN_ARM64_SHA256 }}"
+    end
+  elsif OS.linux?
+    if Hardware::CPU.intel?
+      url "https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_amd64.tar.gz"
+      sha256 "${{ env.LINUX_AMD64_SHA256 }}"
+    elsif Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_arm64.tar.gz"
+      sha256 "${{ env.LINUX_ARM64_SHA256 }}"
+    end
+  end
+
+  def install
+    bin.install "kobra"
+  end
+end
