@@ -286,7 +286,7 @@ func runEditor(path string) error {
 		if err != nil {
 			return err
 		}
-		cmd = exec.Command(editor, path)
+		cmd = exec.Command(editor, path) // #nosec G204
 	} else {
 		parts, err := shlex.Split(editor)
 		if err != nil {
