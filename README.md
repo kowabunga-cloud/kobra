@@ -50,7 +50,7 @@ $ brew install kobra
 
 ## Manual
 
-**Kobra** can be manually installed through https://github.com/kowabunga-cloud/kobra/releases.
+**Kobra** can be manually installed through [released binaries](https://github.com/kowabunga-cloud/kobra/releases).
 
 Just download and extract the tarball for your target.
 
