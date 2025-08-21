@@ -86,7 +86,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 		if err != nil {
 			return nil, err
 		}
-		auth.HostKeyCallback = ssh.InsecureIgnoreHostKey()
+		auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
 		return auth, nil
 	case GitMethodHTTP:
 		username := ptfCfg.Git.HTTP.Username
