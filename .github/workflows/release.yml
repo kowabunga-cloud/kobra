@@ -31,3 +31,11 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PKG_NAME: ${{ env.KOBRA_PKG_NAME }}
           VERSION: ${{ env.KOBRA_VERSION }}
+      - run: sudo apt-get -y install debhelper
+      - name: Build Debian package
+        run: make deb
+      - name: Release Debian Package
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ../*.deb
