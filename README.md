@@ -8,7 +8,7 @@
 
 # Kobra
 
-This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a convenient wrapper over [OpenTofu](https://opentofu.org/), [Ansible](https://www.redhat.com/en/technologies/management/ansible) and [Helmfile](https://helmfile.readthedocs.io/en/latest/) with proper secrets management, removing the hassle of complex deployment startegy.
+This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a convenient wrapper over [OpenTofu](https://opentofu.org/), [Ansible](https://www.redhat.com/en/technologies/management/ansible) and [Helmfile](https://helmfile.readthedocs.io/en/latest/) with proper secrets management, removing the hassle of complex deployment strategy.
 
 [![License: Apache License, Version 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://spdx.org/licenses/Apache-2.0.html)
 [![Build Status](https://github.com/kowabunga-cloud/kobra/actions/workflows/ci.yml/badge.svg)](https://github.com/kowabunga-cloud/kobra/actions/workflows/ci.yml)
