@@ -28,6 +28,32 @@ This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a c
 |--------------------|-----------------------------------------------------------------------------------------------------|
 | **Kobra**           | [![Kowabunga Release](https://img.shields.io/github/v/release/kowabunga-cloud/kobra)](https://github.com/kowabunga-cloud/kobra/releases) |
 
+# Installation
+
+## Ubuntu Linux
+
+Register [Kowabunga APT repository](https://packages.kowabunga.cloud/) and then simply:
+
+```sh
+$ sudo apt-get install kobra
+```
+
+## macOS
+
+macOS can install **Kobra** through [Homebrew](https://brew.sh/). Simply do:
+
+```sh
+$ brew tap kowabunga/cloud https://github.com/kowabunga-cloud/homebrew-tap.git
+$ brew update
+$ brew install kobra
+```
+
+## Manual
+
+**Kobra** can be manually installed through https://github.com/kowabunga-cloud/kobra/releases.
+
+Just download and extract the tarball for your target.
+
 ## Managed Platform Configuration
 
 Kobra-managed platforms require a specific **kobra.yml** file to exist at the root of your platform. This YAML-formated file contains several important pieces of configuration, e.g:
@@ -83,7 +109,7 @@ toolchain:                            # optional
 
 Kobra supports different secrets management **providers**:
 
-- **aws**: AWS Secrets Manager
+- **aws**: AWS Secrets Manager (*TODO*)
 - **env**: Environment variable stored master-key
 - **file**: local plain text master-key file (not recommended for production)
 - **hcp**: Hashicorp Vault
