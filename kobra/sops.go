@@ -293,7 +293,7 @@ func runEditor(path string) error {
 			return fmt.Errorf("invalid $%s: %s", envVar, editor)
 		}
 		parts = append(parts, path)
-		cmd = exec.Command(parts[0], parts[1:]...)
+		cmd = exec.Command(parts[0], parts[1:]...) // #nosec G204
 	}
 
 	cmd.Stdin = os.Stdin
