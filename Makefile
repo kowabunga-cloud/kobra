@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 PKG_NAME=github.com/kowabunga-cloud/kobra/kobra
-VERSION=0.0.8
+VERSION=0.0.9
 
 # Make sure GOPATH is NOT set to this folder or we'll get an error "$GOPATH/go.mod exists but should not"
 #export GOPATH = ""

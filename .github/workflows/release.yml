@@ -69,8 +69,19 @@ jobs:
             end
           end
           "
-          echo "$FORMULA" > kobra.rb
-          echo "$FORMULA"
+          echo "$FORMULAE" > kobra.rb
+      - name: Push Formula to Homebrew tap
+        run: |
+          git clone https://github.com/kowabunga-cloud/homebrew-tap.git
+          cd homebrew-tap
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+          mv ../kobra.rb .
+          git add ./kobra.rb
+          git commit -m "Update formula for ${{ env.KOBRA_VERSION }}"
+          git push https://x-access-token:${{ secrets.PAT_HOMEBREW_TAP_RELEASER }}@github.com/kowabunga-cloud/homebrew-tap.git HEAD:main
       # - run: sudo apt-get -y install debhelper
       # - name: Build Debian package
       #   run: make deb
