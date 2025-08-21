@@ -41,7 +41,7 @@ jobs:
         run: echo "LINUX_AMD64_SHA256=$(sha256sum dist/kobra_linux_amd64_v1/kobra | cut -d ' ' -f 1)" >> $GITHUB_ENV
       - name: Build Homebrew Formulae
         run: |
-          FORMULAE=class Kobra < Formula
+          FORMULAE="class Kobra < Formula
             desc \"DevOps deployment swiss-army knife utility\"
             homepage \"https://github.com/kowabunga-cloud/kobra/\"
             version \"${{ env.KOBRA_VERSION }}\"

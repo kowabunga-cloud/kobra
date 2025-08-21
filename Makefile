@@ -3,7 +3,7 @@
 # SPDX-License-Identifier: Apache-2.0
 
 PKG_NAME=github.com/kowabunga-cloud/kobra/kobra
-VERSION=0.0.7
+VERSION=0.0.8
 
 # Make sure GOPATH is NOT set to this folder or we'll get an error "$GOPATH/go.mod exists but should not"
 #export GOPATH = ""
@@ -100,7 +100,7 @@ tests: ; $(info $(M) running test suite…) @
 	$Q go test ./... -count=1 -coverprofile=coverage.txt
 
 PHONY: deb
-deb: mod fmt vet lint build ; $(info $(M) building debian package…) @
+deb: mod build ; $(info $(M) building debian package…) @
 	$Q VERSION=$(VERSION) ./debian.sh
 
 # This target clean all the generated files
