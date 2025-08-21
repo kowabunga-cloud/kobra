@@ -81,12 +81,18 @@ jobs:
           mv ../kobra.rb .
           git add ./kobra.rb
           git commit -m "Update formula for ${{ env.KOBRA_VERSION }}"
-          git push https://x-access-token:${{ secrets.PAT_HOMEBREW_TAP_RELEASER }}@github.com/kowabunga-cloud/homebrew-tap.git HEAD:main
-      # - run: sudo apt-get -y install debhelper
-      # - name: Build Debian package
-      #   run: make deb
-      # - name: Release Debian Package
-      #   uses: softprops/action-gh-release@v2
-      #   with:
-      #     files: |
-      #       ../*.deb
+          git push https://x-access-token:${{ secrets.PAT_HOMEBREW_TAP_RELEASER }}@github.com/kowabunga-cloud/homebrew-tap.git HEAD:master
+      - run: sudo apt-get -y install debhelper
+      - name: Build Debian package
+        run: make deb
+      - name: Release Debian Package
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            ../*.deb
+      - name: Trigger APT repository update
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: '${{ secrets.PAT_PACKAGES_WORKFLOW_TOKEN }}'
+          repository: kowabunga-cloud/packages
+          event-type: Publish-Deb
