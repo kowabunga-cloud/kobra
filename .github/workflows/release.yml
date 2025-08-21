@@ -21,7 +21,7 @@ jobs:
       - name: Get Kobra package name
         run: echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
       - name: Get Kobra version
-        run: echo "KOBRA_VERSION=$(grep '^VERSION Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+        run: echo "KOBRA_VERSION=$(grep '^VERSION' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v6
         with:
