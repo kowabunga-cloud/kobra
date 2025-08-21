@@ -183,7 +183,7 @@ func encrypt(opts encryptOpts) (encryptedFile []byte, err error) {
 
 func hashFile(filePath string) ([]byte, error) {
 	var result []byte
-	file, err := os.Open(filePath)
+	file, err := os.Open(filepath.Clean(filePath))
 	if err != nil {
 		return result, err
 	}
@@ -374,7 +374,7 @@ func editTree(opts editOpts, tree *sops.Tree, dataKey []byte) ([]byte, error) {
 		_ = os.RemoveAll(tmpdir)
 	}()
 
-	tmpfile, err := os.Create(filepath.Join(tmpdir, filepath.Base(opts.InputPath)))
+	tmpfile, err := os.Create(filepath.Clean(filepath.Join(tmpdir, filepath.Base(opts.InputPath))))
 	if err != nil {
 		return nil, fmt.Errorf(SopsCreateFileErr, err)
 	}
@@ -519,7 +519,7 @@ func SopsEditFile(cfg *KobraConfig, file string) error {
 
 	// We open the file *after* the operations on the tree have been
 	// executed to avoid truncating it when there's errors
-	f, err := os.Create(fileName)
+	f, err := os.Create(filepath.Clean(fileName))
 	if err != nil {
 		return fmt.Errorf(SopsInPlaceErr, err)
 	}
@@ -568,7 +568,7 @@ func SopsEncryptFile(cfg *KobraConfig, file string) error {
 
 	// We open the file *after* the operations on the tree have been
 	// executed to avoid truncating it when there's errors
-	f, err := os.Create(fileName)
+	f, err := os.Create(filepath.Clean(fileName))
 	if err != nil {
 		return fmt.Errorf(SopsInPlaceErr, err)
 	}
