@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 	"time"
 
@@ -57,6 +58,7 @@ func (s *SecretProviderHCP) Login() error {
 
 			fileName = fmt.Sprintf("%s/%s", home, VaultTokenFileDefault)
 		}
+		fileName = filepath.Clean(fileName)
 
 		data, err := os.ReadFile(fileName)
 		if err == nil {
