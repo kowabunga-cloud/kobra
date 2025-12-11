@@ -85,7 +85,10 @@ type PlatformConfigSecretsFile struct {
 
 // PlatformConfigSecretsHCP contains Hashicorp Vault secrets-specific configuration
 type PlatformConfigSecretsHCP struct {
-	Endpoint string `yaml:"endpoint,omitempty"`
+	Endpoint  string `yaml:"endpoint,omitempty"`
+	Mount     string `yaml:"mount,omitempty"`
+	TokenEnv  string `yaml:"token_env,omitempty"`
+	TokenFile string `yaml:"token_file,omitempty"`
 }
 
 // PlatformConfigToolchain toolchain-specific configuration

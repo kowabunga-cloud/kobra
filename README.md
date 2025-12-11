@@ -81,6 +81,9 @@ secrets:
     path: string
   hcp:                                # optional, hcp-provider specific
     endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
+    mount: string                     # optional, default to "secret" if unspecified
+    token_env: string                 # optional, default to "VAULT_TOKEN" if unspecified
+    token_file: string                # optional, default to "$HOME/.vault-token" if unspecified
   master_key_id: string
 ssh:                                  # optional
   remote:                             # remote servers SSH connection parameters
