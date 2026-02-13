@@ -178,7 +178,7 @@ func DownloadFile(name, src string, dst *os.File) error {
 		klog.Errorf("unable to download %s from %s: %s", name, src, err)
 		return err
 	}
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := http.DefaultClient.Do(req) // #nosec G704
 	if err != nil {
 		return err
 	}
@@ -576,7 +576,7 @@ func findPlatformPythonPkgVersion(tp *ThirdPartyTool, currentVersion, requestedV
 	}
 
 	req.Header.Add("Accept", "application/vnd.pypi.simple.v1+json")
-	resp, errGet := client.Do(req)
+	resp, errGet := client.Do(req) // #nosec G704
 	if errGet != nil {
 		return KobraError("%s", errGet.Error())
 	}

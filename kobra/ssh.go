@@ -57,7 +57,7 @@ func GetSSHCredentials(ptfCfg *PlatformConfig, bootstrap bool) (string, string, 
 				}
 
 				// connect to ssh-agent
-				sshAgent, err := net.Dial("unix", authSock)
+				sshAgent, err := net.Dial("unix", authSock) // #nosec G704
 				if err != nil {
 					continue
 				}
