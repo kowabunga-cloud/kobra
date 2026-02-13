@@ -249,7 +249,7 @@ func copy(src, dst string) (int64, error) {
 func CheckSameDevice(src string) (bool, error) {
 
 	var idDest, idSrc uint64
-	dst, err := GetConfigDir()
+	dst, err := LookupPlatformConfigDir()
 	if err != nil {
 		return false, fmt.Errorf("failed to get Kobra config dir'%s' : %w", dst, err)
 	}
