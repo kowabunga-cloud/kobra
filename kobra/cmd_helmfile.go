@@ -33,9 +33,10 @@ const (
 	cmdHfSync     = "sync"
 	cmdHfTemplate = "template"
 
-	hfVerboseDesc = "Enabled extra verbosity/debug"
-	hfYesDesc     = "Yes we can ! Bypass all checks and deploy nonetheless."
-	hfReleaseDesc = "Name of the specific Helm release to be used"
+	hfVerboseDesc   = "Enabled extra verbosity/debug"
+	hfYesDesc       = "Yes we can ! Bypass all checks and deploy nonetheless."
+	hfReleaseDesc   = "Name of the specific Helm release to be used"
+	hfOutputDirDesc = "Path to templates output directory"
 )
 
 var hfSubCommands = map[string]string{
@@ -65,12 +66,13 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 	var hfVerbose bool
 	var hfYes bool
 	var hfRelease string
+	var hfOutputDir string
 
 	sub := &cobra.Command{
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := RunHelmfile(toolchainUpdate, name, hfVerbose, hfYes, hfRelease, args)
+			err := RunHelmfile(toolchainUpdate, name, hfVerbose, hfYes, hfRelease, hfOutputDir, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, fmt.Sprintf("%s %s", cmdHfError, name))
 			}
@@ -81,6 +83,10 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 	sub.Flags().BoolVarP(&hfVerbose, "verbose", "v", false, hfVerboseDesc)
 	sub.Flags().BoolVarP(&hfYes, "yes", "y", false, hfYesDesc)
 	sub.Flags().StringVarP(&hfRelease, "release", "r", "", hfReleaseDesc)
+
+	if name == cmdHfTemplate {
+		sub.Flags().StringVarP(&hfOutputDir, "output-dir", "o", "", hfOutputDirDesc)
+	}
 
 	return sub
 }
