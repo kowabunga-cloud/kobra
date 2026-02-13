@@ -499,6 +499,9 @@ func SopsEditFile(file string) error {
 	}
 	if fileExists {
 		output, err = edit(opts)
+		if strings.Compare(fmt.Sprintf("%s", err), SopsUnchangedFileErr) == 0 {
+			return nil
+		}
 		if err != nil {
 			return err
 		}
