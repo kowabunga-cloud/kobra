@@ -29,7 +29,7 @@ Q = $(if $(filter 1,$V),,@)
 M = $(shell printf "\033[34;1m▶\033[0m")
 
 .PHONY: all
-all: mod fmt vet lint build ; @ ## Do all
+all: mod fmt vet fix lint build ; @ ## Do all
 	$Q echo "done"
 
 # This target grabs the necessary go modules
@@ -54,7 +54,7 @@ build: ; $(info $(M) building executables…) @ ## Build binaries
 		-o $(BINDIR) ./...
 
 .PHONY: release
-release: mod fmt vet lint get-goreleaser ; @
+release: mod fmt vet fix lint get-goreleaser ; @
 	$Q PKG_NAME=$(PKG_NAME) VERSION=$(VERSION) $(GORELEASER) build --snapshot --clean
 
 .PHONY: get-lint
@@ -89,6 +89,10 @@ get-goreleaser: ; $(info $(M) downloading go-releaser…) @
 .PHONY: vet
 vet: ; $(info $(M) running go vet…) @ ## Run go vet
 	$Q go vet $(PKGS) ; exit 0
+
+.PHONY: fix
+fix: ; $(info $(M) running go fix…) @
+	$Q go fix $(PKGS) ; exit 0
 
 # This target run the code format tool
 .PHONY: fmt
