@@ -12,7 +12,7 @@ import (
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
 
-func KobraError(format string, args ...interface{}) error {
+func KobraError(format string, args ...any) error {
 	err := fmt.Errorf(format, args...)
 	klog.Errorf("%s", err)
 	return err
