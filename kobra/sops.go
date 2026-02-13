@@ -183,7 +183,7 @@ func encrypt(opts encryptOpts) (encryptedFile []byte, err error) {
 
 func hashFile(filePath string) ([]byte, error) {
 	var result []byte
-	file, err := os.Open(filepath.Clean(filePath))
+	file, err := os.Open(filepath.Clean(filePath)) // #nosec G703
 	if err != nil {
 		return result, err
 	}
