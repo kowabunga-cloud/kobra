@@ -33,14 +33,14 @@ type PlatformConfigGit struct {
 // PlatformConfigGitSSH contains git-ssh-specific configuration
 type PlatformConfigGitSSH struct {
 	User       string `yaml:"user,omitempty"`
-	PrivateKey string `yaml:"private_key_file,omitempty"`
-	Password   string `yaml:"password,omitempty"`
+	PrivateKey string `yaml:"private_key_file,omitempty"` // #nosec G117
+	Password   string `yaml:"password,omitempty"`         // #nosec G117
 }
 
 // PlatformConfigGitHTTP contains git-http-specific configuration
 type PlatformConfigGitHTTP struct {
 	Username string `yaml:"username,omitempty"`
-	Password string `yaml:"password,omitempty"`
+	Password string `yaml:"password,omitempty"` // #nosec G117
 	Token    string `yaml:"token,omitempty"`
 }
 
