@@ -17,7 +17,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v5
         with:
-          go-version: 1.25
+          go-version: 1.26
       - name: Get Kobra package name
         run: echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
       - name: Get Kobra version
