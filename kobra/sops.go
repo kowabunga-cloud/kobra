@@ -446,7 +446,7 @@ func defaultStore(path string) common.Store {
 	return common.DefaultStoreForPathOrFormat(config.NewStoresConfig(), path, "")
 }
 
-func SopsViewFile(cfg *KobraConfig, file string) error {
+func SopsViewFile(file string) error {
 	keyFile, err := secretsSopsSetEnv()
 	if err != nil {
 		return err
@@ -472,7 +472,7 @@ func SopsViewFile(cfg *KobraConfig, file string) error {
 	return err
 }
 
-func SopsEditFile(cfg *KobraConfig, file string) error {
+func SopsEditFile(file string) error {
 	keyFile, err := secretsSopsSetEnv()
 	if err != nil {
 		return err
@@ -534,7 +534,7 @@ func SopsEditFile(cfg *KobraConfig, file string) error {
 	return nil
 }
 
-func SopsEncryptFile(cfg *KobraConfig, file string) error {
+func SopsEncryptFile(file string) error {
 	keyFile, err := secretsSopsSetEnv()
 	if err != nil {
 		return err

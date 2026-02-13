@@ -102,7 +102,7 @@ func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData
 	return helmfileExec(ptfCfg, cmd, hfDir, args, envs)
 }
 
-func RunHelmfile(cfg *KobraConfig, toolchainUpdate bool, cmd string, verbose, bypass bool, release string, freeArgs []string) error {
+func RunHelmfile(toolchainUpdate bool, cmd string, verbose, bypass bool, release string, freeArgs []string) error {
 	// get Helmfile dir
 	hfDir, err := LookupHelmfileDir()
 	if err != nil {

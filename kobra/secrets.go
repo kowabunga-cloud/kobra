@@ -168,7 +168,7 @@ func masterKeyDecode(key string) (*KobraSecretData, error) {
 	return &data, nil
 }
 
-func RunSecretsInit(cfg *KobraConfig) error {
+func RunSecretsInit() error {
 	// read platform configuration
 	ptfCfg, err := GetPlatformConfig()
 	if err != nil {
@@ -265,19 +265,19 @@ func secretsSopsSetEnv() (string, error) {
 	return sops, nil
 }
 
-func RunSecretsEncrypt(cfg *KobraConfig, file string) error {
-	return SopsEncryptFile(cfg, file)
+func RunSecretsEncrypt(file string) error {
+	return SopsEncryptFile(file)
 }
 
-func RunSecretsEdit(cfg *KobraConfig, file string) error {
-	return SopsEditFile(cfg, file)
+func RunSecretsEdit(file string) error {
+	return SopsEditFile(file)
 }
 
-func RunSecretsView(cfg *KobraConfig, file string) error {
-	return SopsViewFile(cfg, file)
+func RunSecretsView(file string) error {
+	return SopsViewFile(file)
 }
 
-func RunSecretsGet(cfg *KobraConfig) error {
+func RunSecretsGet() error {
 	// read platform configuration
 	ptfCfg, err := GetPlatformConfig()
 	if err != nil {
@@ -307,7 +307,7 @@ func RunSecretsGet(cfg *KobraConfig) error {
 	return nil
 }
 
-func RunSecretsSet(cfg *KobraConfig, masterKey string) error {
+func RunSecretsSet(masterKey string) error {
 	// read platform configuration
 	ptfCfg, err := GetPlatformConfig()
 	if err != nil {

@@ -48,8 +48,7 @@ var ansiblePullCmd = &cobra.Command{
 	Short:   cmdAnsiblePullDesc,
 	Aliases: []string{"p"},
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := GetConfig()
-		err := RunAnsiblePull(&cfg)
+		err := RunAnsiblePull()
 		if err != nil {
 			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdAnsibleError)
@@ -75,8 +74,7 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 		Use:   cmdAnsibleDeploy,
 		Short: cmdAnsibleDeployDesc,
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg := GetConfig()
-			err := RunAnsible(&cfg, toolchainUpdate, deployPlaybook, deployUpgrade, deployCheck, deployBootstrap, deployListTags, deployTags, deploySkipTags, deployExtraVars, deployLimit, deployVerbose, deployYes, args)
+			err := RunAnsible(toolchainUpdate, deployPlaybook, deployUpgrade, deployCheck, deployBootstrap, deployListTags, deployTags, deploySkipTags, deployExtraVars, deployLimit, deployVerbose, deployYes, args)
 			if err != nil {
 				klog.Errorf("error: %s", err)
 				klog.Fatalf(cmdFailureStatus, cmdAnsibleError)

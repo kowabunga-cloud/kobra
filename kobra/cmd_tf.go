@@ -72,8 +72,7 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg := GetConfig()
-			err := RunTF(&cfg, toolchainUpdate, name, tfModule, tfResource, tfOutput, tfAuto, tfYes, args)
+			err := RunTF(toolchainUpdate, name, tfModule, tfResource, tfOutput, tfAuto, tfYes, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, cmdTfError)
 			}

@@ -31,7 +31,7 @@ func lookupTerraform(ptfCfg *PlatformConfig) (string, error) {
 	return LookupPlatformBinary(binName)
 }
 
-func executeTF(cfg *KobraConfig, ptfCfg *PlatformConfig, secrets *KobraSecretData, tfDir, cmd, module, resource, output string, auto bool, extraArgs []string) error {
+func executeTF(ptfCfg *PlatformConfig, secrets *KobraSecretData, tfDir, cmd, module, resource, output string, auto bool, extraArgs []string) error {
 
 	// lookup for TF binary
 	tfBin, err := lookupTerraform(ptfCfg)
@@ -90,7 +90,7 @@ func executeTF(cfg *KobraConfig, ptfCfg *PlatformConfig, secrets *KobraSecretDat
 	return BinExec(tfBin, tfDir, args, envs)
 }
 
-func RunTF(cfg *KobraConfig, toolchainUpdate bool, cmd, module, resource, output string, auto, bypass bool, extraArgs []string) error {
+func RunTF(toolchainUpdate bool, cmd, module, resource, output string, auto, bypass bool, extraArgs []string) error {
 	// get Terraform dir
 	tfDir, err := LookupTerraformDir()
 	if err != nil {
@@ -121,7 +121,7 @@ func RunTF(cfg *KobraConfig, toolchainUpdate bool, cmd, module, resource, output
 	}
 
 	// now try to run TF
-	err = executeTF(cfg, ptfCfg, secrets, tfDir, cmd, module, resource, output, auto, extraArgs)
+	err = executeTF(ptfCfg, secrets, tfDir, cmd, module, resource, output, auto, extraArgs)
 	if err != nil {
 		return err
 	}

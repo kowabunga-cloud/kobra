@@ -70,8 +70,7 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg := GetConfig()
-			err := RunHelmfile(&cfg, toolchainUpdate, name, hfVerbose, hfYes, hfRelease, args)
+			err := RunHelmfile(toolchainUpdate, name, hfVerbose, hfYes, hfRelease, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, fmt.Sprintf("%s %s", cmdHfError, name))
 			}

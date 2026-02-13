@@ -53,8 +53,7 @@ var secretsInitCmd = &cobra.Command{
 	Short:   cmdSecretsInitDesc,
 	Aliases: []string{"i"},
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := GetConfig()
-		err := RunSecretsInit(&cfg)
+		err := RunSecretsInit()
 		if err != nil {
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
 		}
@@ -67,8 +66,7 @@ var secretsEncryptCmd = &cobra.Command{
 	Aliases: []string{},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := GetConfig()
-		err := RunSecretsEncrypt(&cfg, args[0])
+		err := RunSecretsEncrypt(args[0])
 		if err != nil {
 			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
@@ -82,8 +80,7 @@ var secretsEditCmd = &cobra.Command{
 	Aliases: []string{"e"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := GetConfig()
-		err := RunSecretsEdit(&cfg, args[0])
+		err := RunSecretsEdit(args[0])
 		if err != nil {
 			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
@@ -97,8 +94,7 @@ var secretsViewCmd = &cobra.Command{
 	Aliases: []string{"v"},
 	Args:    cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-		cfg := GetConfig()
-		err := RunSecretsView(&cfg, args[0])
+		err := RunSecretsView(args[0])
 		if err != nil {
 			klog.Errorf("error: %s", err)
 			klog.Fatalf(cmdFailureStatus, cmdSecretsError)
@@ -114,8 +110,6 @@ func NewSecretsGetSetSubCommand(name, desc string) *cobra.Command {
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			cfg := GetConfig()
-
 			// are you sure ?
 			if !iMeanIt {
 				klog.Fatalf(cmdSecretsMeanItError)
@@ -123,7 +117,7 @@ func NewSecretsGetSetSubCommand(name, desc string) *cobra.Command {
 
 			switch name {
 			case cmdSecretsGet:
-				err := RunSecretsGet(&cfg)
+				err := RunSecretsGet()
 				if err != nil {
 					klog.Fatalf(cmdFailureStatus, cmdSecretsError)
 				}
@@ -132,7 +126,7 @@ func NewSecretsGetSetSubCommand(name, desc string) *cobra.Command {
 					klog.Fatalf(cmdSecretsSetNoMasterKeyError)
 				}
 
-				err := RunSecretsSet(&cfg, masterKey)
+				err := RunSecretsSet(masterKey)
 				if err != nil {
 					klog.Fatalf(cmdFailureStatus, cmdSecretsError)
 				}

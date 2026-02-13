@@ -17,6 +17,7 @@ import (
 )
 
 const (
+	KobraConfigDir      = ".kobra.d"
 	KobraPlatformBinDir = "bin"
 
 	AnsibleDirName   = "ansible"
