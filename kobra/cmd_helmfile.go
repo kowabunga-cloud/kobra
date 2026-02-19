@@ -34,7 +34,7 @@ const (
 	cmdHfTemplate = "template"
 
 	hfVerboseDesc   = "Enabled extra verbosity/debug"
-	hfYesDesc       = "Yes we can ! Bypass all checks and deploy nonetheless."
+	hfSkipDesc      = "Skip Git checks and and run nonetheless."
 	hfReleaseDesc   = "Name of the specific Helm release to be used"
 	hfOutputDirDesc = "Path to templates output directory"
 )
@@ -64,7 +64,7 @@ var hfCmd = &cobra.Command{
 func NewHfSubCommand(name, desc string) *cobra.Command {
 	var toolchainUpdate bool
 	var hfVerbose bool
-	var hfYes bool
+	var hfSkip bool
 	var hfRelease string
 	var hfOutputDir string
 
@@ -72,7 +72,7 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := RunHelmfile(toolchainUpdate, name, hfVerbose, hfYes, hfRelease, hfOutputDir, args)
+			err := RunHelmfile(toolchainUpdate, name, hfVerbose, hfSkip, hfRelease, hfOutputDir, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, fmt.Sprintf("%s %s", cmdHfError, name))
 			}
@@ -81,7 +81,7 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 
 	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
 	sub.Flags().BoolVarP(&hfVerbose, "verbose", "v", false, hfVerboseDesc)
-	sub.Flags().BoolVarP(&hfYes, "yes", "y", false, hfYesDesc)
+	sub.Flags().BoolVarP(&hfSkip, "skip", "s", false, hfSkipDesc)
 	sub.Flags().StringVarP(&hfRelease, "release", "r", "", hfReleaseDesc)
 
 	if name == cmdHfTemplate {

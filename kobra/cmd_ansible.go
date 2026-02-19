@@ -34,7 +34,7 @@ const (
 	cmdAnsibleDeploySkipTagsDesc  = "Ansible tags to be skipped, comma-separated"
 	cmdAnsibleDeployExtraVarsDesc = "Ansible extra variables to be set as 'key1=value1 key2=value2' (space-separated)"
 	cmdAnsibleDeployVerboseDesc   = "Enabled extra verbosity"
-	cmdAnsibleDeployYesDesc       = "Yes we can ! Bypass all checks and deploy nonetheless."
+	cmdAnsibleDeploySkipDesc      = "Skip Git checks and and run nonetheless."
 )
 
 var ansibleCmd = &cobra.Command{
@@ -68,13 +68,13 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 	var deployLimit string
 	var deployExtraVars string
 	var deployVerbose bool
-	var deployYes bool
+	var deploySkip bool
 
 	sub := &cobra.Command{
 		Use:   cmdAnsibleDeploy,
 		Short: cmdAnsibleDeployDesc,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := RunAnsible(toolchainUpdate, deployPlaybook, deployUpgrade, deployCheck, deployBootstrap, deployListTags, deployTags, deploySkipTags, deployExtraVars, deployLimit, deployVerbose, deployYes, args)
+			err := RunAnsible(toolchainUpdate, deployPlaybook, deployUpgrade, deployCheck, deployBootstrap, deployListTags, deployTags, deploySkipTags, deployExtraVars, deployLimit, deployVerbose, deploySkip, args)
 			if err != nil {
 				klog.Errorf("error: %s", err)
 				klog.Fatalf(cmdFailureStatus, cmdAnsibleError)
@@ -98,11 +98,11 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 	sub.Flags().BoolVarP(&deployBootstrap, "bootstrap", "b", false, cmdAnsibleDeployBootstrapDesc)
 	sub.Flags().BoolVarP(&deployListTags, "list-tags", "l", false, cmdAnsibleDeployListTagsDesc)
 	sub.Flags().StringVarP(&deployTags, "tags", "t", "", cmdAnsibleDeployTagsDesc)
-	sub.Flags().StringVarP(&deploySkipTags, "skip-tags", "s", "", cmdAnsibleDeploySkipTagsDesc)
+	sub.Flags().StringVarP(&deploySkipTags, "skip-tags", "S", "", cmdAnsibleDeploySkipTagsDesc)
 	sub.Flags().StringVarP(&deployExtraVars, "extra-vars", "E", "", cmdAnsibleDeployExtraVarsDesc)
 	sub.Flags().StringVarP(&deployLimit, "limit", "L", "", cmdAnsibleDeployLimitDesc)
 	sub.Flags().BoolVarP(&deployVerbose, "verbose", "v", false, cmdAnsibleDeployVerboseDesc)
-	sub.Flags().BoolVarP(&deployYes, "yes", "y", false, cmdAnsibleDeployYesDesc)
+	sub.Flags().BoolVarP(&deploySkip, "skip", "s", false, cmdAnsibleDeploySkipDesc)
 
 	return sub
 }

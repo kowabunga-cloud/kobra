@@ -37,7 +37,7 @@ const (
 	tfResourceDesc    = "Restrict TF usage to the specified resource"
 	tfOutputDesc      = "Output TF plan to the specified file"
 	tfAutoApproveDesc = "Automatically approves (WARNING: use it at your own risk)"
-	tfYesDesc         = "Yes we can ! Bypass all checks and run nonetheless."
+	tfSkipDesc        = "Skip Git checks and and run nonetheless."
 )
 
 var tfSubCommands = map[string]string{
@@ -66,13 +66,13 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 	var tfResource string
 	var tfOutput string
 	var tfAuto bool
-	var tfYes bool
+	var tfSkip bool
 
 	sub := &cobra.Command{
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := RunTF(toolchainUpdate, name, tfModule, tfResource, tfOutput, tfAuto, tfYes, args)
+			err := RunTF(toolchainUpdate, name, tfModule, tfResource, tfOutput, tfAuto, tfSkip, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, cmdTfError)
 			}
@@ -80,7 +80,7 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 	}
 
 	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
-	sub.Flags().BoolVarP(&tfYes, "yes", "y", false, tfYesDesc)
+	sub.Flags().BoolVarP(&tfSkip, "skip", "s", false, tfSkipDesc)
 
 	if slices.Contains([]string{cmdTfApply, cmdTfDestroy, cmdTfPlan}, name) {
 		sub.Flags().StringVarP(&tfModule, "module", "m", "", tfModuleDesc)
