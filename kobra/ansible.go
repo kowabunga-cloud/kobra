@@ -276,10 +276,14 @@ func runPlaybook(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, i
 			return err
 		}
 
-		args = append(args, "--user")
-		args = append(args, user)
-		args = append(args, "--key-file")
-		args = append(args, keyFile)
+		if user != "" {
+			args = append(args, "--user")
+			args = append(args, user)
+		}
+		if keyFile != "" {
+			args = append(args, "--key-file")
+			args = append(args, keyFile)
+		}
 
 		// become admin
 		args = append(args, "--become")
