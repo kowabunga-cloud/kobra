@@ -108,6 +108,29 @@ toolchain:                            # optional
                                       # and value being package version (use 'latest' if unpinned).
 ```
 
+## SSH Connectivity
+
+While global SSH connection (either to Git or managed instances, through Ansible) can be set in **kobra.yml** file, it is highly recommended to keep it properly managed at OS level.
+
+A good approach is to ensure you have a **$HOME/.ssh/config** file, with global (i.e. fallback) **User** and/or **IdentityFile** definition, and optional per-host(s)s or subnet(s) override, e.g.:
+
+```
+User jdoe
+IdentityFile /home/jdoe/.ssh/id_ecdsa
+
+Host 10.*
+    User ubuntu
+    IdentityFile /home/jdoe/.ssh/priv-key
+```
+
+Alternatively, one can also set per-host settings and overrides and let Ansible address hosts by himself, e.g. with **ansible/inventories/hosts.txt**:
+
+```ini
+[all]
+host-1 ansible_host=192.168.0.1 ansible_ssh_user=root ansible_ssh_private_key_file=/path/to/file
+host-2 ansible_host=192.168.0.2 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=/path/to/another/file
+```
+
 ## Secrets Management
 
 Kobra supports different secrets management **providers**:
