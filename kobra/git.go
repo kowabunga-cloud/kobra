@@ -8,7 +8,6 @@ package kobra
 
 import (
 	"fmt"
-	"strings"
 
 	"golang.org/x/crypto/ssh"
 
@@ -64,44 +63,73 @@ func revListCount(r *git.Repository, from, to *plumbing.Reference) (int, error) 
 }
 
 func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
-	switch ptfCfg.Git.Method {
+	ep, err := transport.NewEndpoint(url)
+	if err != nil {
+		return nil, err
+	}
+
+	// protocol definition
+	protocol := ep.Protocol
+	if ptfCfg.Git.Method != GitMethodUnknown { // override if defined
+		protocol = ptfCfg.Git.Method
+	}
+	klog.Debugf("Using Git protocol '%s'", protocol)
+
+	// host definition
+	host := ep.Host
+	klog.Debugf("Using Git host '%s'", host)
+
+	// user definition
+	user := ep.User
+	if ptfCfg.Git.Method == GitMethodSSH { // override if defined
+		if user == "" {
+			user = GitDefaultUserSSH
+		}
+		if ptfCfg.Git.SSH.User != "" { // override if defined
+			user = ptfCfg.Git.SSH.User
+		}
+	}
+	if ptfCfg.Git.Method == GitMethodHTTP && ptfCfg.Git.HTTP.Username != "" { // override if defined
+		user = ptfCfg.Git.HTTP.Username
+	}
+	klog.Debugf("Using Git user '%s'", user)
+
+	// password definition
+	password := ep.Password
+	if ptfCfg.Git.Method == GitMethodSSH && ptfCfg.Git.SSH.Password == "" { // override if defined
+		password = ptfCfg.Git.SSH.Password
+	}
+	if ptfCfg.Git.Method == GitMethodHTTP && ptfCfg.Git.HTTP.Password != "" { // override if defined
+		password = ptfCfg.Git.HTTP.Password
+	}
+	if password != "" {
+		klog.Debugf("Using Git password '***REDACTED***'")
+	}
+
+	switch protocol {
 	case GitMethodSSH:
-		if ptfCfg.Git.SSH.User == "" {
-			ptfCfg.Git.SSH.User = GitDefaultUserSSH
-		}
 		if ptfCfg.Git.SSH.PrivateKey == "" {
-			host := strings.Split(url, ":")[0]
-			if strings.Contains(host, "@") {
-				host = strings.Split(host, "@")[1]
-			}
-			klog.Debugf("Using Git host '%s'", host)
 			ptfCfg.Git.SSH.PrivateKey = ssh_config.Get(host, "IdentityFile")
-
+			klog.Debugf("Using Git private key from %s", ptfCfg.Git.SSH.PrivateKey)
 		}
 
-		klog.Debugf("Using Git user '%s'", ptfCfg.Git.SSH.User)
-		klog.Debugf("Using Git private key from %s", ptfCfg.Git.SSH.PrivateKey)
-
-		auth, err := gssh.NewPublicKeysFromFile(ptfCfg.Git.SSH.User, ptfCfg.Git.SSH.PrivateKey, ptfCfg.Git.SSH.Password)
+		auth, err := gssh.NewPublicKeysFromFile(user, ptfCfg.Git.SSH.PrivateKey, password)
 		if err != nil {
 			return nil, err
 		}
 		auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
 		return auth, nil
 	case GitMethodHTTP:
-		username := ptfCfg.Git.HTTP.Username
-		password := ptfCfg.Git.HTTP.Password
-
 		if ptfCfg.Git.HTTP.Token != "" {
 			// The intended use of a GitHub personal access token is in replace of your password
 			// because access tokens can easily be revoked.
 			// https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
-			username = "abc123" // yes, this can be anything except an empty string
+			user = "abc123" // yes, this can be anything except an empty string
 			password = ptfCfg.Git.HTTP.Token
 		}
 
 		return &ghttp.BasicAuth{
-			Username: username,
+			Username: user,
 			Password: password,
 		}, nil
 	}
