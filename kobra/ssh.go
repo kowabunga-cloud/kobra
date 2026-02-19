@@ -25,14 +25,14 @@ func GetSSHCredentials(ptfCfg *PlatformConfig, bootstrap bool) (string, string, 
 
 	// if SSH credentials have been manually set in config file, we're good to go
 	if bootstrap {
-		if ptfCfg.SSH.Remote.User != "" && ptfCfg.SSH.Remote.KeyFile != "" {
-			user = ptfCfg.SSH.Remote.User
-			key = ptfCfg.SSH.Remote.KeyFile
-		}
-	} else {
 		if ptfCfg.SSH.Bootstrap.User != "" && ptfCfg.SSH.Bootstrap.KeyFile != "" {
 			user = ptfCfg.SSH.Bootstrap.User
 			key = ptfCfg.SSH.Bootstrap.KeyFile
+		}
+	} else {
+		if ptfCfg.SSH.Remote.User != "" && ptfCfg.SSH.Remote.KeyFile != "" {
+			user = ptfCfg.SSH.Remote.User
+			key = ptfCfg.SSH.Remote.KeyFile
 		}
 	}
 
