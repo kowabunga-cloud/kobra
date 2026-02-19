@@ -126,8 +126,9 @@ const (
 	PlatformConfigFile = "kobra.yml"
 	InvalidConfigField = "empty or invalid %s in platform configuration file: '%s'"
 
-	GitMethodSSH  = "ssh"
-	GitMethodHTTP = "http"
+	GitMethodUnknown = ""
+	GitMethodSSH     = "ssh"
+	GitMethodHTTP    = "http"
 
 	GitDefaultUserSSH = "git"
 
@@ -147,6 +148,7 @@ const (
 func isSupportedGitMethod(method string) bool {
 	switch method {
 	case
+		GitMethodUnknown,
 		GitMethodSSH,
 		GitMethodHTTP:
 		return true
@@ -242,7 +244,7 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	}
 
 	// set default value
-	LookupDefault(&cfg.Git.Method, "Git Method", GitMethodSSH)
+	LookupDefault(&cfg.Git.Method, "Git Method", GitMethodUnknown)
 	LookupDefault(&cfg.Toolchain.TF.Provider, "TF Provider", TfProviderOpenTofu)
 	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helm.Version, "Helm Version", ToolchainVersionLatest)
