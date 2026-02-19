@@ -9,6 +9,9 @@ package kobra
 import (
 	"net"
 	"os"
+	"os/user"
+	"path/filepath"
+	"strings"
 
 	"github.com/kevinburke/ssh_config"
 	"golang.org/x/crypto/ssh/agent"
@@ -19,6 +22,33 @@ const (
 	SSHConfigKey      = "IdentityFile"
 	SSHAgentSocketEnv = "SSH_AUTH_SOCK"
 )
+
+func expandTilde(p string) (string, error) {
+	if !strings.HasPrefix(p, "~") {
+		return p, nil // nothing to do
+	}
+
+	// Fast path for the current user: "~" or "~/..."
+	if p == "~" || strings.HasPrefix(p, "~/") || strings.HasPrefix(p, `~\`) {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(home, p[2:]), nil // strip "~/" and join
+	}
+
+	// If the tilde is followed by a username (e.g. "~bob/foo"), we need to look up that user explicitly.
+	sepIdx := strings.IndexAny(p, `/\`) // first slash/backslash after "~bob"
+	if sepIdx == -1 {
+		sepIdx = len(p)
+	}
+	username := p[1:sepIdx] // everything between "~" and the separator
+	usr, err := user.Lookup(username)
+	if err != nil {
+		return "", err
+	}
+	return filepath.Join(usr.HomeDir, p[sepIdx+1:]), nil
+}
 
 func GetSSHCredentials(ptfCfg *PlatformConfig, bootstrap bool) (string, string, error) {
 	var user, key string
@@ -34,6 +64,14 @@ func GetSSHCredentials(ptfCfg *PlatformConfig, bootstrap bool) (string, string, 
 			user = ptfCfg.SSH.Remote.User
 			key = ptfCfg.SSH.Remote.KeyFile
 		}
+	}
+
+	if key != "" && strings.HasPrefix(key, "~/") {
+		expanded, err := expandTilde(key)
+		if err != nil {
+			return "", "", err
+		}
+		key = expanded
 	}
 
 	if user == "" || key == "" {
