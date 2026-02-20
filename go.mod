@@ -5,6 +5,7 @@ go 1.26.0
 require (
 	filippo.io/age v1.3.1
 	github.com/99designs/keyring v1.2.2
+	github.com/Masterminds/semver/v3 v3.1.1
 	github.com/codeclysm/extract/v4 v4.0.0
 	github.com/cqroot/prompt v0.9.4
 	github.com/getsops/sops/v3 v3.11.0

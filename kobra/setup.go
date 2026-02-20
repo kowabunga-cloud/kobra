@@ -20,10 +20,12 @@ import (
 	"path/filepath"
 	"runtime"
 	"slices"
+	"sort"
 	"strings"
 	"syscall"
 	"unicode"
 
+	"github.com/Masterminds/semver/v3"
 	"github.com/codeclysm/extract/v4"
 	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 	"github.com/oriser/regroup"
@@ -681,7 +683,14 @@ func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVers
 		if len(releaseVersions) == 0 {
 			return fmt.Errorf("unable to find latest stable release for %s", tp.Name)
 		}
-		tp.Version = releaseVersions[len(releaseVersions)-1]
+
+		vs := make([]*semver.Version, len(releaseVersions))
+		for i, r := range releaseVersions {
+			v, _ := semver.NewVersion(r)
+			vs[i] = v
+		}
+		sort.Sort(semver.Collection(vs))
+		tp.Version = vs[len(vs)-1].String()
 	}
 
 	return nil
