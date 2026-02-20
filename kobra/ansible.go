@@ -230,6 +230,18 @@ func runPlaybook(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, i
 
 	envs = append(envs, envSops...)
 
+	if !ptfCfg.Toolchain.UseSystem {
+		path := os.Getenv("PATH")
+		binDir, err := LookupPlatformBinDir()
+		if err != nil {
+			return err
+		}
+
+		if path != "" {
+			envs = append(envs, fmt.Sprintf("PATH=%s:%s", binDir, path))
+		}
+	}
+
 	// set command-line arguments
 	args := []string{
 		"--diff",
@@ -342,7 +354,7 @@ func RunAnsible(toolchainUpdate bool, playbook string, upgrade, check, bootstrap
 	}
 
 	// setup toolchain, if needed
-	err = SetupPlatformToolchain(ptfCfg, toolchainUpdate, ToolchainToolAnsible)
+	err = SetupPlatformToolchain(ptfCfg, toolchainUpdate, ToolchainToolAnsible, ToolchainToolSops)
 	if err != nil {
 		return err
 	}
