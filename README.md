@@ -101,6 +101,8 @@ toolchain:                            # optional
     version: string                   # optional, 'latest' if unspecified
   helmfile:                           # optional
     version: string                   # optional, 'latest' if unspecified
+  sops:                               # optional
+    version: string                   # optional, 'latest' if unspecified
   ansible:                            # optional
     version: string                   # optional, 'latest' if unspecified
     packages:                         # optional, list of extra Python packages from PyPI to be added to toolchain

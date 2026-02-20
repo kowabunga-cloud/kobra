@@ -42,6 +42,7 @@ import (
 )
 
 const (
+	SopsBin              = "sops"
 	SopsReadFileErr      = "error reading file: %s"
 	SopsUnmarshalErr     = "error unmarshalling file: %s"
 	SopsEmptyFileErr     = "file cannot be completely empty, it must contain at least one document"

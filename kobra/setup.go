@@ -45,6 +45,7 @@ const (
 	ToolchainToolHelm     = "helm"
 	ToolchainToolHelmfile = "helmfile"
 	ToolchainToolAnsible  = "ansible"
+	ToolchainToolSops     = "sops"
 
 	PythonBin = "python3"
 	PipBin    = "pip3"
@@ -95,6 +96,12 @@ var toolchainTools = map[string]ThirdPartyTool{
 		GitHubRepo: "helmfile/helmfile",
 		SourceURI:  "https://github.com/helmfile/helmfile/releases/download/v{VERSION}/helmfile_{VERSION}_{OS}_{ARCH}.tar.gz",
 		Binaries:   []string{HelmfileBin},
+	},
+	SopsBin: ThirdPartyTool{
+		Name:       "Sops",
+		GitHubRepo: "getsops/sops",
+		SourceURI:  "https://github.com/getsops/sops/releases/download/v{VERSION}/sops-v{VERSION}.{OS}.{ARCH}",
+		BinaryName: SopsBin,
 	},
 	AnsibleBin: ThirdPartyTool{
 		Name:     "Ansible",
@@ -781,6 +788,38 @@ func SetupPlatformToolchain(cfg *PlatformConfig, update bool, tools ...string) e
 					errExtract := tp.ExtractFromTarballArchive(binDir)
 					if errExtract != nil {
 						return errExtract
+					}
+				}
+			}
+		case ToolchainToolSops:
+			tp := toolchainTools[SopsBin]
+
+			binExe, err := LookupPlatformBinary(SopsBin)
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
+				return err
+			}
+
+			out, err := BinExecOut(binExe, binDir, []string{"--version"}, []string{})
+			if err == nil {
+				currentVersion = strings.TrimSuffix(strings.Split(out, "\n")[0], "\n")
+				vOut := strings.Split(currentVersion, " ")
+				if len(vOut) > 1 {
+					currentVersion = vOut[1]
+				}
+			}
+
+			requestedVersion := cfg.Toolchain.Sops.Version
+			if err != nil || (update && currentVersion != requestedVersion) {
+				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
+				if errVersion != nil {
+					return errVersion
+				}
+
+				if currentVersion != tp.Version {
+					dst := fmt.Sprintf("%s/%s", binDir, tp.BinaryName)
+					errStandalone := tp.StandaloneBinary(dst)
+					if errStandalone != nil {
+						return errStandalone
 					}
 				}
 			}

@@ -97,6 +97,7 @@ type PlatformConfigToolchain struct {
 	TF        PlatformConfigToolchainTF       `yaml:"tf,omitempty"`
 	Helm      PlatformConfigToolchainHelm     `yaml:"helm,omitempty"`
 	Helmfile  PlatformConfigToolchainHelmfile `yaml:"helmfile,omitempty"`
+	Sops      PlatformConfigToolchainSops     `yaml:"sops,omitempty"`
 	Ansible   PlatformConfigToolchainAnsible  `yaml:"ansible,omitempty"`
 }
 
@@ -113,6 +114,11 @@ type PlatformConfigToolchainHelm struct {
 
 // PlatformConfigToolchainHelmfile contains helmfile-specific configuration
 type PlatformConfigToolchainHelmfile struct {
+	Version string `yaml:"version,omitempty"`
+}
+
+// PlatformConfigToolchainSops contains sops-specific configuration
+type PlatformConfigToolchainSops struct {
 	Version string `yaml:"version,omitempty"`
 }
 
@@ -249,6 +255,7 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helm.Version, "Helm Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helmfile.Version, "Helmfile Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.Sops.Version, "Sops Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Ansible.Version, "Ansible Version", ToolchainVersionLatest)
 
 	// check for valid configuration
