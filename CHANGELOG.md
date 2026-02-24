@@ -1,5 +1,10 @@
 ## unreleased
 
+## 0.3.1 - 2026.02.24
+* **Global**: Fix possible parsing of invalid semantic releases versions.
+* **Global**: Built-in Kubseal support within platform's toolchain.
+* **Helmfile**: Use platform's native Kubeseal binary, prevent system's one requirement (if needed).
+
 ## 0.3.0 - 2026.02.20
 * **Global**: Use --skip instead of --yes for Git checks bypass.
 * **Global**: Built-in Sops support within platform's toolchain.
