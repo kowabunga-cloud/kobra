@@ -88,6 +88,18 @@ func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData
 		}()
 	}
 
+	if !ptfCfg.Toolchain.UseSystem {
+		path := os.Getenv("PATH")
+		binDir, err := LookupPlatformBinDir()
+		if err != nil {
+			return err
+		}
+
+		if path != "" {
+			envs = append(envs, fmt.Sprintf("PATH=%s:%s", binDir, path))
+		}
+	}
+
 	args := []string{}
 	if verbose {
 		args = append(args, "--log-level")
