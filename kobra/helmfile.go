@@ -18,6 +18,7 @@ const (
 	HelmfileBin                = "helmfile"
 	HelmfileConfigFile         = "helmfile.yaml"
 	HelmfileConfigFileTemplate = "helmfile.yaml.gotmpl"
+	KubesealBin                = "kubeseal"
 )
 
 func helmfileChecks(hfDir string) error {

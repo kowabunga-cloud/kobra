@@ -98,6 +98,7 @@ type PlatformConfigToolchain struct {
 	Helm      PlatformConfigToolchainHelm     `yaml:"helm,omitempty"`
 	Helmfile  PlatformConfigToolchainHelmfile `yaml:"helmfile,omitempty"`
 	Sops      PlatformConfigToolchainSops     `yaml:"sops,omitempty"`
+	Kubeseal  PlatformConfigToolchainKubeseal `yaml:"kubeseal,omitempty"`
 	Ansible   PlatformConfigToolchainAnsible  `yaml:"ansible,omitempty"`
 }
 
@@ -119,6 +120,11 @@ type PlatformConfigToolchainHelmfile struct {
 
 // PlatformConfigToolchainSops contains sops-specific configuration
 type PlatformConfigToolchainSops struct {
+	Version string `yaml:"version,omitempty"`
+}
+
+// PlatformConfigToolchainKubeseal contains kubeseal-specific configuration
+type PlatformConfigToolchainKubeseal struct {
 	Version string `yaml:"version,omitempty"`
 }
 
@@ -256,6 +262,7 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	LookupDefault(&cfg.Toolchain.Helm.Version, "Helm Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helmfile.Version, "Helmfile Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Sops.Version, "Sops Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.Kubeseal.Version, "Kubeseal Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Ansible.Version, "Ansible Version", ToolchainVersionLatest)
 
 	// check for valid configuration
