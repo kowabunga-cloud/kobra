@@ -691,10 +691,13 @@ func findPlatformBinaryVersion(tp *ThirdPartyTool, currentVersion, requestedVers
 			return fmt.Errorf("unable to find latest stable release for %s", tp.Name)
 		}
 
-		vs := make([]*semver.Version, len(releaseVersions))
-		for i, r := range releaseVersions {
-			v, _ := semver.NewVersion(r)
-			vs[i] = v
+		vs := []*semver.Version{}
+		for _, r := range releaseVersions {
+			v, err := semver.NewVersion(r)
+			if err != nil {
+				continue
+			}
+			vs = append(vs, v)
 		}
 		sort.Sort(semver.Collection(vs))
 		tp.Version = vs[len(vs)-1].String()
