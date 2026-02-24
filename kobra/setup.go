@@ -48,6 +48,7 @@ const (
 	ToolchainToolHelmfile = "helmfile"
 	ToolchainToolAnsible  = "ansible"
 	ToolchainToolSops     = "sops"
+	ToolchainToolKubeseal = "kubeseal"
 
 	PythonBin = "python3"
 	PipBin    = "pip3"
@@ -104,6 +105,12 @@ var toolchainTools = map[string]ThirdPartyTool{
 		GitHubRepo: "getsops/sops",
 		SourceURI:  "https://github.com/getsops/sops/releases/download/v{VERSION}/sops-v{VERSION}.{OS}.{ARCH}",
 		BinaryName: SopsBin,
+	},
+	KubesealBin: ThirdPartyTool{
+		Name:       "Kubeseal",
+		GitHubRepo: "bitnami-labs/sealed-secrets",
+		SourceURI:  "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{VERSION}/kubeseal-{VERSION}-{OS}-{ARCH}.tar.gz",
+		Binaries:   []string{KubesealBin},
 	},
 	AnsibleBin: ThirdPartyTool{
 		Name:     "Ansible",
@@ -829,6 +836,37 @@ func SetupPlatformToolchain(cfg *PlatformConfig, update bool, tools ...string) e
 					errStandalone := tp.StandaloneBinary(dst)
 					if errStandalone != nil {
 						return errStandalone
+					}
+				}
+			}
+		case ToolchainToolKubeseal:
+			tp := toolchainTools[KubesealBin]
+
+			binExe, err := LookupPlatformBinary(KubesealBin)
+			if err != nil && !errors.Is(err, os.ErrNotExist) {
+				return err
+			}
+
+			out, err := BinExecOut(binExe, binDir, []string{"--version"}, []string{})
+			if err == nil {
+				currentVersion = strings.TrimSuffix(out, "\n")
+				vOut := strings.Split(currentVersion, " ")
+				if len(vOut) > 2 {
+					currentVersion = vOut[2][1:]
+				}
+			}
+
+			requestedVersion := cfg.Toolchain.Kubeseal.Version
+			if err != nil || (update && currentVersion != requestedVersion) {
+				errVersion := findPlatformBinaryVersion(&tp, currentVersion, requestedVersion)
+				if errVersion != nil {
+					return errVersion
+				}
+
+				if currentVersion != tp.Version {
+					errExtract := tp.ExtractFromTarballArchive(binDir)
+					if errExtract != nil {
+						return errExtract
 					}
 				}
 			}
