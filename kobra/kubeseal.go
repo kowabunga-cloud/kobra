@@ -54,7 +54,7 @@ func kubesealRunCmd(ptfCfg *PlatformConfig, sealNamespace, sealSecret, sealLiter
 		return err
 	}
 	defer func() {
-		_ = os.Remove(sealFile.Name())
+		_ = os.Remove(sealFile.Name()) // #nosec G703
 	}()
 
 	_, err = sealFile.WriteString(sealLiteral)
