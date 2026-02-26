@@ -1,5 +1,10 @@
 ## unreleased
 
+## 0.3.2 - 2026.02.26
+* **Global**: Add unit tests suite.
+* **Global**: Updated build and runtime dependencies.
+* **kubeseal**: Introduce Kubeseal support for Kubernetes Sealed Secrets encryption.
+
 ## 0.3.1 - 2026.02.24
 * **Global**: Fix possible parsing of invalid semantic releases versions.
 * **Global**: Built-in Kubseal support within platform's toolchain.
