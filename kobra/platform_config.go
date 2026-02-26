@@ -125,7 +125,14 @@ type PlatformConfigToolchainSops struct {
 
 // PlatformConfigToolchainKubeseal contains kubeseal-specific configuration
 type PlatformConfigToolchainKubeseal struct {
-	Version string `yaml:"version,omitempty"`
+	Version    string                                    `yaml:"version,omitempty"`
+	Controller PlatformConfigToolchainKubesealController `yaml:"controller,omitempty"`
+}
+
+// PlatformConfigToolchainKubeseal contains kubeseal-controller-specific configuration
+type PlatformConfigToolchainKubesealController struct {
+	NS   string `yaml:"namespace,omitempty"`
+	Name string `yaml:"name,omitempty"`
 }
 
 // PlatformConfigToolchainAnsible contains ansible-specific configuration
@@ -150,6 +157,9 @@ const (
 	SecretsProviderHCP     = "hcp"
 	SecretsProviderInput   = "input"
 	SecretsProviderKeyring = "keyring"
+
+	KubesealControllerDefaultNamespace = "kube-system"
+	KubesealControllerDefaultName      = "sealed-secrets"
 
 	ToolchainVersionLatest = "latest"
 
@@ -264,6 +274,8 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 	LookupDefault(&cfg.Toolchain.Sops.Version, "Sops Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Kubeseal.Version, "Kubeseal Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Ansible.Version, "Ansible Version", ToolchainVersionLatest)
+	LookupDefault(&cfg.Toolchain.Kubeseal.Controller.NS, "Kubeseal Controller Namespace", KubesealControllerDefaultNamespace)
+	LookupDefault(&cfg.Toolchain.Kubeseal.Controller.Name, "Kubeseal Controller Name", KubesealControllerDefaultName)
 
 	// check for valid configuration
 	err = cfg.IsValid()

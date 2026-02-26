@@ -105,6 +105,9 @@ toolchain:                            # optional
     version: string                   # optional, 'latest' if unspecified
   kubeseal:                           # optional
     version: string                   # optional, 'latest' if unspecified
+    controller:                       # optional
+      namespace: string               # optional, 'kube-system' if unspecified
+      name: string                    # optional, 'sealed-secrets' if unspecified
   ansible:                            # optional
     version: string                   # optional, 'latest' if unspecified
     packages:                         # optional, list of extra Python packages from PyPI to be added to toolchain
