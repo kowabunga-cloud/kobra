@@ -15,6 +15,7 @@ import (
 
 const (
 	KobraDebugEnv = "KOBRA_DEBUG"
+	KobraNoLog    = "KOBRA_NOLOG"
 )
 
 func main() {
@@ -24,10 +25,17 @@ func main() {
 	if debug == "1" {
 		logLevel = "DEBUG"
 	}
+
+	enabled := true
+	nolog := os.Getenv(KobraNoLog)
+	if nolog == "1" {
+		enabled = false
+	}
+
 	klog.Init("kobra", []klog.LoggerConfiguration{
 		{
 			Type:    "console",
-			Enabled: true,
+			Enabled: enabled,
 			Level:   logLevel,
 		},
 	})

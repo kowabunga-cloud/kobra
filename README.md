@@ -151,6 +151,13 @@ Kobra supports different secrets management **providers**:
 
 **WARNING**: it is highly recommended not to use local secret management backends if secret is to be used by other contributors. When working as a team, always rely on distributed secret management backends.
 
+## Tips & Ticks
+
+Kobra supports various environment variables to tune its behavior:
+
+- **KOBRA_DEBUG=1** would turn maximum verbosity.
+- **KOBRA_NOLOG=1** would completely disable logs.
+
 ## License
 
 Licensed under [Apache License, Version 2.0](https://opensource.org/license/apache-2-0), see [`LICENSE`](LICENSE).
