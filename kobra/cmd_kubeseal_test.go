@@ -16,6 +16,7 @@ func TestNewSealCommand(t *testing.T) {
 
 	if cmd == nil {
 		t.Fatal("expected command to be created, got nil")
+		return
 	}
 
 	if cmd.Use != cmdSeal {
