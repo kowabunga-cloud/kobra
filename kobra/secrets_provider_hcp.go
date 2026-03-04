@@ -20,7 +20,7 @@ import (
 	"github.com/hashicorp/vault-client-go"
 	"github.com/hashicorp/vault-client-go/schema"
 
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 )
 
 const (

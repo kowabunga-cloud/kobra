@@ -20,7 +20,7 @@ import (
 	ghttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	gssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
 	"github.com/kevinburke/ssh_config"
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 )
 
 const (

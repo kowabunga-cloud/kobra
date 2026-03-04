@@ -16,7 +16,7 @@ import (
 
 	"filippo.io/age"
 
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 )
 
 const (

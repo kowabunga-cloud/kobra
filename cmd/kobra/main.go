@@ -9,8 +9,8 @@ package main
 import (
 	"os"
 
+	"github.com/kowabunga-cloud/common/klog"
 	"github.com/kowabunga-cloud/kobra/kobra"
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
 )
 
 const (

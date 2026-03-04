@@ -338,8 +338,8 @@ github.com/klauspost/compress v1.18.4 h1:RPhnKRAQ4Fh8zU2FY/6ZFDwTVTxgJ/EMydqSTzE
 github.com/klauspost/compress v1.18.4/go.mod h1:R0h/fSBs8DE4ENlcrlib3PsXS61voFxhIs2DeRhCvJ4=
 github.com/klauspost/cpuid/v2 v2.3.0 h1:S4CRMLnYUhGeDFDqkGriYKdfoFlDnMtqTiI/sFzhA9Y=
 github.com/klauspost/cpuid/v2 v2.3.0/go.mod h1:hqwkgyIinND0mEev00jJYCxPNVRVXFQeu1XKlok6oO0=
-github.com/kowabunga-cloud/kowabunga v0.64.0 h1:TNlOCzj9K4or8aQUMYM2QWSQH9keZ72p6yOowdMh1HM=
-github.com/kowabunga-cloud/kowabunga v0.64.0/go.mod h1:E5s74910fG7fxX6u5XBn270c3fMYjw8vKpUhzBgHTvg=
+github.com/kowabunga-cloud/common v0.64.1 h1:fwmOVMsBZDcRVT0XssILRHxhHIkngdSr90qysD3nrL8=
+github.com/kowabunga-cloud/common v0.64.1/go.mod h1:amJ223EIY8zX8+BkUapL8DzgrXF3ZEZBYw/L50jTRic=
 github.com/kr/pretty v0.1.0/go.mod h1:dAy3ld7l9f0ibDNOQOHHMYYIIbhfbHSm3C4ZsoJORNo=
 github.com/kr/pretty v0.3.1 h1:flRD4NNwYAUpkphVc1HcthR4KEIFJ65n8Mw5qdRn3LE=
 github.com/kr/pretty v0.3.1/go.mod h1:hoEshYVHaxMs3cyo3Yncou5ZscifuDolrwPKZanG3xk=

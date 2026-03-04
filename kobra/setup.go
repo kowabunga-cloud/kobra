@@ -27,7 +27,7 @@ import (
 
 	"github.com/Masterminds/semver/v3"
 	"github.com/codeclysm/extract/v4"
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 	"github.com/oriser/regroup"
 )
 

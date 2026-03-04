@@ -12,7 +12,7 @@ import (
 	"os/exec"
 	"strings"
 
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 )
 
 func binExec(bin, dir string, args, envs []string, stdout, stderr io.Writer) error {

@@ -13,7 +13,7 @@ require (
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/kevinburke/ssh_config v1.6.0
-	github.com/kowabunga-cloud/kowabunga v0.64.0
+	github.com/kowabunga-cloud/common v0.64.1
 	github.com/mitchellh/go-wordwrap v1.0.1
 	github.com/oriser/regroup v0.0.0-20240925165441-f6bb0e08289e
 	github.com/spf13/cobra v1.10.2

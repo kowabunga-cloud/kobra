@@ -10,7 +10,7 @@ import (
 	"github.com/cqroot/prompt"
 	"github.com/cqroot/prompt/input"
 
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 )
 
 type SecretProviderInput struct{}

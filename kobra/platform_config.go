@@ -11,7 +11,7 @@ import (
 	"io"
 	"os"
 
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 	"gopkg.in/yaml.v3"
 )
 

@@ -10,7 +10,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/kowabunga-cloud/kowabunga/kowabunga/common/klog"
+	"github.com/kowabunga-cloud/common/klog"
 )
 
 const (
