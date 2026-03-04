@@ -28,10 +28,12 @@ const (
 	cmdHfFetch    = "fetch"
 	cmdHfInit     = "init"
 	cmdHfList     = "list"
+	cmdHfPrintEnv = "print-env"
 	cmdHfRepos    = "repos"
 	cmdHfStatus   = "status"
 	cmdHfSync     = "sync"
 	cmdHfTemplate = "template"
+	cmdHfWriteVal = "write-values"
 
 	hfVerboseDesc   = "Enabled extra verbosity/debug"
 	hfSkipDesc      = "Skip Git checks and and run nonetheless."
@@ -48,10 +50,12 @@ var hfSubCommands = map[string]string{
 	cmdHfFetch:    "Fetch charts from state file",
 	cmdHfInit:     "Initialize the helmfile, includes version checking and installation of helm and plug-ins",
 	cmdHfList:     "List releases defined in state file",
+	cmdHfPrintEnv: "Print parsed environment configuration",
 	cmdHfRepos:    "Add chart repositories defined in state file",
 	cmdHfStatus:   "Retrieve status of releases in state file",
 	cmdHfSync:     "Sync releases defined in state file",
 	cmdHfTemplate: "Template releases defined in state file",
+	cmdHfWriteVal: "Write values files for releases. Similar to `helmfile template`, write values files instead of manifests",
 }
 
 var hfCmd = &cobra.Command{
@@ -84,7 +88,7 @@ func NewHfSubCommand(name, desc string) *cobra.Command {
 	sub.Flags().BoolVarP(&hfSkip, "skip", "s", false, hfSkipDesc)
 	sub.Flags().StringVarP(&hfRelease, "release", "r", "", hfReleaseDesc)
 
-	if name == cmdHfTemplate {
+	if name == cmdHfTemplate || name == cmdHfWriteVal {
 		sub.Flags().StringVarP(&hfOutputDir, "output-dir", "o", "", hfOutputDirDesc)
 	}
 

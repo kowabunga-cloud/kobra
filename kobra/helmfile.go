@@ -9,6 +9,7 @@ package kobra
 import (
 	"fmt"
 	"os"
+	"strings"
 
 	"github.com/kowabunga-cloud/common/klog"
 )
@@ -111,6 +112,14 @@ func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData
 	if cmd == cmdHfTemplate && outputDir != "" {
 		args = append(args, "--output-dir-template")
 		args = append(args, outputDir)
+	}
+	if cmd == cmdHfWriteVal && outputDir != "" {
+		args = append(args, "--output-file-template")
+		if strings.Contains(outputDir, "{{") {
+			args = append(args, outputDir)
+		} else {
+			args = append(args, fmt.Sprintf("%s/{{ .Release.Namespace }}/{{ .Release.Name}}/values.yaml", outputDir))
+		}
 	}
 
 	args = append(args, freeArgs...)
