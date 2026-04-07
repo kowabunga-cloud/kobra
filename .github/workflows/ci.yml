@@ -1,32 +1,16 @@
-name: CI
+name: Continuous Integration
 
 on:
   push:
     branches: master
+    paths:
+      - 'cmd/kobra/**'
+      - 'kobra/**'
+  pull_request:
+    branches: master
+  workflow_dispatch:
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.26
-      - name: Install dependencies
-        run: make mod
-      - name: Format code
-        run: make fmt
-      - name: Code Acceptance
-        run: make vet
-      - name: Linter
-        run: make lint
-      - name: Build
-        run: make build
-      - name: Tests
-        run: make tests
-      - name: Upload test results to Codecov
-        uses: codecov/codecov-action@v5
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
+  ci:
+    uses: kowabunga-cloud/workflows/.github/workflows/go-ci.yml@master
+    secrets: inherit

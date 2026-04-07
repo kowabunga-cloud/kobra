@@ -1,20 +1,16 @@
-name: Go Vulnerabilities Check
+name: Vulnerabilities Check
+
 on:
   push:
-    branches:
-      - master
+    branches: master
+    paths:
+      - 'cmd/kobra/**'
+      - 'kobra/**'
+  pull_request:
+    branches: master
+  workflow_dispatch:
 
 jobs:
-  govulncheck:
-    runs-on: ubuntu-latest
-
-    steps:
-      - uses: actions/checkout@v4
-      - name: Setup Go
-        uses: actions/setup-go@v5
-        with:
-          go-version: 1.26
-      - name: Install dependencies
-        run: make mod
-      - name: Run GoVulnCheck security scanner
-        run: make vuln
+  vuln:
+    uses: kowabunga-cloud/workflows/.github/workflows/go-vuln.yml@master
+    secrets: inherit
