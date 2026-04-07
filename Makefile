@@ -98,7 +98,7 @@ tests: ; $(info $(M) running test suite…) @
 
 PHONY: deb
 deb: mod build ; $(info $(M) building debian package…) @
-	$Q VERSION=$(VERSION) ./debian.sh
+	$Q ./debian.sh
 
 # This target clean all the generated files
 .PHONY: clean
