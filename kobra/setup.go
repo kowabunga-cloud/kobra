@@ -283,14 +283,14 @@ func CheckSameDevice(src string) (bool, error) {
 	default:
 		return false, fmt.Errorf("cannot get source file's device '%s' information : %w", src, err)
 	case *syscall.Stat_t:
-		idSrc = uint64(s.Dev)
+		idSrc = uint64(s.Dev) // #nosec G115 -- Dev is always non-negative; equality comparison only
 	}
 	d := fileInfoDST.Sys()
 	switch d := d.(type) {
 	default:
 		return false, fmt.Errorf("cannot get destination file's device '%s' information : %w", src, err)
 	case *syscall.Stat_t:
-		idDest = uint64(d.Dev)
+		idDest = uint64(d.Dev) // #nosec G115 -- Dev is always non-negative; equality comparison only
 	}
 	if idSrc == idDest {
 		return true, nil
