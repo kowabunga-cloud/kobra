@@ -1,7 +1,9 @@
+.claude/
 bin/
 dist/
 publish/
 coverage.txt
+coverage.out
 kobra.yml
 master_key.txt
 terraform/
