@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.2](https://github.com/kowabunga-cloud/kobra/compare/v0.4.1...v0.4.2) (2026-04-07)
+
+### Chores
+
+* ensure homebrew release is made against proper release tag ([a52a87c](https://github.com/kowabunga-cloud/kobra/commit/a52a87c495f319490873feeb080763a82e226547))
+
 ## [0.4.1](https://github.com/kowabunga-cloud/kobra/compare/v0.4.0...v0.4.1) (2026-04-07)
 
 ### Chores
