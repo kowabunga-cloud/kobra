@@ -118,6 +118,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
+          ref: v${{ needs.release.outputs.new_release_version }}
           fetch-depth: 0
       - name: Setup Go
         uses: actions/setup-go@v6
