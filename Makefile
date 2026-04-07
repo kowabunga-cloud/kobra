@@ -19,6 +19,10 @@ PKGS = $(shell go list ./...)
 
 V = 0
 Q = $(if $(filter 1,$V),,@)
+PROD = 0
+ifeq ($(PROD),1)
+DEBUG = -w -s
+endif
 M = $(shell printf "\033[34;1m▶\033[0m")
 
 .PHONY: all
@@ -43,7 +47,7 @@ build: ; $(info $(M) building executables…) @ ## Build binaries
 	$Q mkdir -p $(BINDIR)
 	$Q go build \
 		-gcflags="kobra/...=-e" \
-		-ldflags='-s -w -X $(PKG_NAME).version=$(VERSION)' \
+		-ldflags='$(DEBUG) -X $(PKG_NAME).version=$(VERSION)' \
 		-o $(BINDIR) ./...
 
 .PHONY: release
