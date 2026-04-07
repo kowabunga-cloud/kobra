@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	SecretsProviderEnvVariableDefault = "KOBRA_MASTER_KEY"
+	SecretsProviderEnvVariableDefault = "KOBRA_MASTER_KEY" // #nosec G101
 )
 
 type SecretProviderEnv struct {

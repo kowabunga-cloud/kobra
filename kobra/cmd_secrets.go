@@ -15,14 +15,14 @@ import (
 
 const (
 	cmdSecrets      = "secrets"
-	cmdSecretsDesc  = "Manage SOPS-encrypted secrets file"
+	cmdSecretsDesc  = "Manage SOPS-encrypted secrets file" // #nosec G101
 	cmdSecretsError = "Secrets"
 
 	cmdSecretsInit     = "init"
-	cmdSecretsInitDesc = "Initialize a new SOPS private/public key pair"
+	cmdSecretsInitDesc = "Initialize a new SOPS private/public key pair" // #nosec G101
 
 	cmdSecretsEncrypt     = "encrypt"
-	cmdSecretsEncryptDesc = "Encrypt an existing plain-text file with SOPS"
+	cmdSecretsEncryptDesc = "Encrypt an existing plain-text file with SOPS" // #nosec G101
 
 	cmdSecretsEdit     = "edit"
 	cmdSecretsEditDesc = "Create/Update/Edit a SOPS-encrypted file"
@@ -34,13 +34,13 @@ const (
 	cmdSecretsGetDesc = "Retrieve Base64-encoded SOPS master key (WARNING: sensitive data)"
 
 	cmdSecretsSet     = "set"
-	cmdSecretsSetDesc = "Set/Overwrite Base64-encoded SOPS master key (WARNING: dangerous, use it with care)"
+	cmdSecretsSetDesc = "Set/Overwrite Base64-encoded SOPS master key (WARNING: dangerous, use it with care)" // #nosec G101
 
-	cmdSecretsSetMasterKeyDesc    = "Base64-encoded SOPS master key to be set"
-	cmdSecretsSetNoMasterKeyError = "Unable to set secrets, no Base64-encoded provided"
+	cmdSecretsSetMasterKeyDesc    = "Base64-encoded SOPS master key to be set"          // #nosec G101
+	cmdSecretsSetNoMasterKeyError = "Unable to set secrets, no Base64-encoded provided" // #nosec G101
 
 	cmdSecretsMeanItDesc  = "Really perform what's been asked for"
-	cmdSecretsMeanItError = "Unable to get/set secrets. Use --yes-i-really-mean-it flag if that's really what you want"
+	cmdSecretsMeanItError = "Unable to get/set secrets. Use --yes-i-really-mean-it flag if that's really what you want" // #nosec G101
 )
 
 var secretsCmd = &cobra.Command{
