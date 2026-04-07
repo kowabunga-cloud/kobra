@@ -1,40 +1,143 @@
 name: release
 
 on:
-  push:
-    tags:
-      - '*'
+  workflow_call:
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+env:
+  GO_VERSION: 1.26
 
 jobs:
-  build:
+  release:
+    name: Create Release
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      id-token: write
+    outputs:
+      new_release_published: ${{ steps.semantic.outputs.new_release_published }}
+      new_release_version: ${{ steps.semantic.outputs.new_release_version }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+
+      - name: Install Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: |
+          npm install \
+            @semantic-release/changelog@6.0.3 \
+            @semantic-release/git@10.0.1 \
+            conventional-changelog-conventionalcommits@9.1.0
+
+      - name: Create Github App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          app-id: ${{ vars.KOWABUNGA_BOT_APP_ID }}
+          private-key: ${{ secrets.KOWABUNGA_BOT_PRIVATE_KEY }}
+
+      - name: Release
+        uses: cycjimmy/semantic-release-action@v6
+        id: semantic
+        with:
+          semantic_version: 25.0.3
+        env:
+          GITHUB_TOKEN: ${{ steps.app-token.outputs.token }}
+
+      - name: Debug
+        run: |
+          echo "Releasing ${{ steps.semantic.outputs.new_release_version }}"
+
+  build:
+    if: needs.release.outputs.new_release_published == 'true'
+    needs: release
+    name: Multiarch Debian builds
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-24.04
+            arch: amd64
+            version: noble
+          - os: ubuntu-24.04-arm
+            arch: arm64
+            version: noble
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Update packages
+        run: sudo apt-get update
+      - name: Install package dependencies
+        run: sudo apt-get install -y debhelper
+      - uses: actions/checkout@v6
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@v6
         with:
-          go-version: 1.26
+          go-version: ${{ env.GO_VERSION }}
+      - name: Build
+        run: make all PROD=1
+      - name: Build Debian package
+        run: |
+          DIST=${{ matrix.version }} \
+          RELEASE=${{ needs.release.outputs.new_release_version }} ./debian.sh
+      - name: Upload Assets to GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: v${{ needs.release.outputs.new_release_version }}
+          files: |
+            ../*.deb
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  publish:
+    if: needs.release.outputs.new_release_published == 'true'
+    name: Trigger packages publishing
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger APT repository update
+        uses: peter-evans/repository-dispatch@v4
+        with:
+          token: '${{ secrets.PAT_PACKAGES_WORKFLOW_TOKEN }}'
+          repository: kowabunga-cloud/packages
+          event-type: Publish-Deb
+
+  homebrew:
+    if: needs.release.outputs.new_release_published == 'true'
+    needs: release
+    name: Homebrew build and release
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v6
+      - name: Setup Go
+        uses: actions/setup-go@v6
+        with:
+          go-version: ${{ env.GO_VERSION }}
       - name: Get Kobra package name
         run: echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
       - name: Get Kobra version
-        run: echo "KOBRA_VERSION=$(grep '^VERSION' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+        run: echo "KOBRA_VERSION=${{ needs.release.outputs.new_release_version }}" >> $GITHUB_ENV
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v6
+        uses: goreleaser/goreleaser-action@v7
         with:
           version: '~> v2'
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           PKG_NAME: ${{ env.KOBRA_PKG_NAME }}
-          VERSION: ${{ env.KOBRA_VERSION }}
+          VERSION: v${{ env.KOBRA_VERSION }}
       - name: Retrieve build residues SHA256 checksums
         run: |
           sudo apt-get -y install curl
-          curl -L https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_SHA256SUMS -o cksum.txt
+          curl -L https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_SHA256SUMS -o cksum.txt
           echo "DARWIN_ARM64_SHA256=$(cat cksum.txt | grep darwin_arm64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "DARWIN_AMD64_SHA256=$(cat cksum.txt | grep darwin_amd64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "LINUX_ARM64_SHA256=$(cat cksum.txt | grep linux_arm64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
@@ -48,18 +151,18 @@ jobs:
 
             if OS.mac?
               if Hardware::CPU.intel?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_amd64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_amd64.tar.gz\"
                 sha256 \"${{ env.DARWIN_AMD64_SHA256 }}\"
               elsif Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_arm64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_arm64.tar.gz\"
                 sha256 \"${{ env.DARWIN_ARM64_SHA256 }}\"
               end
             elsif OS.linux?
               if Hardware::CPU.intel?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_amd64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_amd64.tar.gz\"
                 sha256 \"${{ env.LINUX_AMD64_SHA256 }}\"
               elsif Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_arm64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_arm64.tar.gz\"
                 sha256 \"${{ env.LINUX_ARM64_SHA256 }}\"
               end
             end
@@ -82,17 +185,3 @@ jobs:
           git add ./kobra.rb
           git commit -m "Update formula for ${{ env.KOBRA_VERSION }}"
           git push https://x-access-token:${{ secrets.PAT_HOMEBREW_TAP_RELEASER }}@github.com/kowabunga-cloud/homebrew-tap.git HEAD:master
-      - run: sudo apt-get -y install debhelper
-      - name: Build Debian package
-        run: make deb
-      - name: Release Debian Package
-        uses: softprops/action-gh-release@v2
-        with:
-          files: |
-            ../*.deb
-      - name: Trigger APT repository update
-        uses: peter-evans/repository-dispatch@v3
-        with:
-          token: '${{ secrets.PAT_PACKAGES_WORKFLOW_TOKEN }}'
-          repository: kowabunga-cloud/packages
-          event-type: Publish-Deb
