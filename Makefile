@@ -72,7 +72,7 @@ get-gosec: ; $(info $(M) downloading gosec…) @
 
 .PHONY: sec
 sec: get-gosec ; $(info $(M) running gosec…) @ ## AST / SSA code checks
-	$Q $(GOSEC) -terse -exclude=G101,G302,G115 ./... ; exit 0
+	$Q $(GOSEC) -terse ./... ; exit 0
 
 .PHONY: get-goreleaser
 get-goreleaser: ; $(info $(M) downloading go-releaser…) @
