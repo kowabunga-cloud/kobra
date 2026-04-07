@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.4.1](https://github.com/kowabunga-cloud/kobra/compare/v0.4.0...v0.4.1) (2026-04-07)
+
+### Chores
+
+* force homebrew checkout to fetch tags ([2e129f5](https://github.com/kowabunga-cloud/kobra/commit/2e129f5c5d19b43f5fc3bc4a7839a5d5c6e8f5a1))
+
 ## [0.4.0](https://github.com/kowabunga-cloud/kobra/compare/v0.3.2...v0.4.0) (2026-04-07)
 
 ### Chores
