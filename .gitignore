@@ -4,6 +4,13 @@ dist/
 publish/
 coverage.txt
 coverage.out
+debian/changelog
+debian/.debhelper
+debian/debhelper-build-stamp
+debian/files
+debian/*.debhelper
+debian/*.substvars
+debian/kobra/
 kobra.yml
 master_key.txt
 terraform/
