@@ -11,7 +11,7 @@ builds:
   gcflags:
     - kobra/...=-e
   ldflags:
-    - -X {{.Env.PKG_NAME}}.version={{.Env.VERSION}}
+    - -w -s -X {{.Env.PKG_NAME}}.version={{.Env.VERSION}}
   goos:
     - darwin
     - linux
