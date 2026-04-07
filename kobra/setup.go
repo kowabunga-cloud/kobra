@@ -224,7 +224,7 @@ func DownloadFile(name, src string, dst *os.File) error {
 
 func GrantExecRights(bin string) error {
 	// ensure executable rights
-	return os.Chmod(bin, 0750)
+	return os.Chmod(bin, 0750) // #nosec G302 -- intentional executable rights grant for owner and group, but not others
 }
 
 func copy(src, dst string) (int64, error) {
