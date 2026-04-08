@@ -83,7 +83,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 
 	// user definition
 	user := ep.User.Username()
-	if ptfCfg.Git.Method == GitMethodSSH { // override if defined
+	if protocol == GitMethodSSH { // override if defined
 		if user == "" {
 			user = GitDefaultUserSSH
 		}
@@ -91,17 +91,17 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 			user = ptfCfg.Git.SSH.User
 		}
 	}
-	if ptfCfg.Git.Method == GitMethodHTTP && ptfCfg.Git.HTTP.Username != "" { // override if defined
+	if protocol == GitMethodHTTP && ptfCfg.Git.HTTP.Username != "" { // override if defined
 		user = ptfCfg.Git.HTTP.Username
 	}
 	klog.Debugf("Using Git user '%s'", user)
 
 	// password definition
 	password, _ := ep.User.Password()
-	if ptfCfg.Git.Method == GitMethodSSH && ptfCfg.Git.SSH.Password == "" { // override if defined
+	if protocol == GitMethodSSH && ptfCfg.Git.SSH.Password == "" { // override if defined
 		password = ptfCfg.Git.SSH.Password
 	}
-	if ptfCfg.Git.Method == GitMethodHTTP && ptfCfg.Git.HTTP.Password != "" { // override if defined
+	if protocol == GitMethodHTTP && ptfCfg.Git.HTTP.Password != "" { // override if defined
 		password = ptfCfg.Git.HTTP.Password
 	}
 	if password != "" {
