@@ -12,14 +12,14 @@ import (
 
 	"golang.org/x/crypto/ssh"
 
-	"github.com/go-git/go-git/v5"
-	"github.com/go-git/go-git/v5/config"
-	"github.com/go-git/go-git/v5/plumbing"
-	"github.com/go-git/go-git/v5/plumbing/object"
-	"github.com/go-git/go-git/v5/plumbing/revlist"
-	"github.com/go-git/go-git/v5/plumbing/transport"
-	ghttp "github.com/go-git/go-git/v5/plumbing/transport/http"
-	gssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/config"
+	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/object"
+	"github.com/go-git/go-git/v6/plumbing/revlist"
+	"github.com/go-git/go-git/v6/plumbing/transport"
+	ghttp "github.com/go-git/go-git/v6/plumbing/transport/http"
+	gssh "github.com/go-git/go-git/v6/plumbing/transport/ssh"
 	"github.com/go-git/go-git/v6/plumbing/transport/ssh/sshagent"
 	"github.com/kevinburke/ssh_config"
 	"github.com/kowabunga-cloud/common/klog"
@@ -71,7 +71,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 	}
 
 	// protocol definition
-	protocol := ep.Protocol
+	protocol := ep.Scheme
 	if ptfCfg.Git.Method != GitMethodUnknown { // override if defined
 		protocol = ptfCfg.Git.Method
 	}
@@ -82,7 +82,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 	klog.Debugf("Using Git host '%s'", host)
 
 	// user definition
-	user := ep.User
+	user := ep.User.Username()
 	if ptfCfg.Git.Method == GitMethodSSH { // override if defined
 		if user == "" {
 			user = GitDefaultUserSSH
@@ -97,7 +97,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 	klog.Debugf("Using Git user '%s'", user)
 
 	// password definition
-	password := ep.Password
+	password, _ := ep.User.Password()
 	if ptfCfg.Git.Method == GitMethodSSH && ptfCfg.Git.SSH.Password == "" { // override if defined
 		password = ptfCfg.Git.SSH.Password
 	}
@@ -179,6 +179,9 @@ func IsGitRepoUpToDate(ptfCfg *PlatformConfig, bypass bool) (bool, error) {
 	if err != nil {
 		return false, KobraError(GitReadError, err)
 	}
+	defer func() {
+		_ = repo.Close()
+	}()
 
 	// retrieves configuration
 	cfg, err := repo.Config()
