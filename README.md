@@ -115,11 +115,21 @@ toolchain:                            # optional
                                       # and value being package version (use 'latest' if unpinned).
 ```
 
+## Git Authentication
+
+Note that Kobra will try to connect to Git before doing any deployment action. This is an intended extra security measure to ensure no divergence between your local copy and the remote one. More specifically, it is understood (and allowed) that your local branch can be ahead of origin repository's one, but not the opposite. This is meant to ensure you're not going to deploy a possibly outdated configuration of your platform.
+
+Kobra will try auto-detecting Git repository's access as much as can be, but it can be further tuned in **git.{*}** configuration options in **kobra.yml** file.
+
+Note that it is always possible to bypass this behavior by specifiying the **--skip** (or **-s**) command-line flag.
+
 ## SSH Connectivity
 
 While global SSH connection (either to Git or managed instances, through Ansible) can be set in **kobra.yml** file, it is highly recommended to keep it properly managed at OS level.
 
-A good approach is to ensure you have a **$HOME/.ssh/config** file, with global (i.e. fallback) **User** and/or **IdentityFile** definition, and optional per-host(s)s or subnet(s) override, e.g.:
+By default, Git connectivity will rely on [SSH Agent](https://linux.die.net/man/1/ssh-agent), if available.
+
+If not, a good approach is to ensure you have a **$HOME/.ssh/config** file, with global (i.e. fallback) **User** and/or **IdentityFile** definition, and optional per-host(s)s or subnet(s) override, e.g.:
 
 ```
 User jdoe

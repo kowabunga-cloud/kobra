@@ -10,6 +10,7 @@ require (
 	github.com/cqroot/prompt v0.9.4
 	github.com/getsops/sops/v3 v3.12.2
 	github.com/go-git/go-git/v5 v5.17.2
+	github.com/go-git/go-git/v6 v6.0.0-alpha.1
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510
 	github.com/hashicorp/vault-client-go v0.4.3
 	github.com/kevinburke/ssh_config v1.6.0
@@ -157,7 +158,7 @@ require (
 	github.com/ryanuber/go-glob v1.0.0 // indirect
 	github.com/sergi/go-diff v1.4.0 // indirect
 	github.com/sirupsen/logrus v1.9.4 // indirect
-	github.com/skeema/knownhosts v1.3.2 // indirect
+	github.com/skeema/knownhosts v1.3.1 // indirect
 	github.com/spf13/pflag v1.0.10 // indirect
 	github.com/spiffe/go-spiffe/v2 v2.6.0 // indirect
 	github.com/tjfoc/gmsm v1.4.1 // indirect

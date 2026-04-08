@@ -8,6 +8,7 @@ package kobra
 
 import (
 	"fmt"
+	"strings"
 
 	"golang.org/x/crypto/ssh"
 
@@ -19,6 +20,7 @@ import (
 	"github.com/go-git/go-git/v5/plumbing/transport"
 	ghttp "github.com/go-git/go-git/v5/plumbing/transport/http"
 	gssh "github.com/go-git/go-git/v5/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v6/plumbing/transport/ssh/sshagent"
 	"github.com/kevinburke/ssh_config"
 	"github.com/kowabunga-cloud/common/klog"
 )
@@ -108,10 +110,33 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 
 	switch protocol {
 	case GitMethodSSH:
+		// if SSH agent is available, use it for authentication
+		if sshagent.Available() {
+			klog.Debugf("Using SSH agent for Git authentication")
+			auth, err := gssh.NewSSHAgentAuth(user)
+			if err != nil {
+				return nil, err
+			}
+
+			auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
+			return auth, nil
+		}
+
+		// fallback to private key authentication
+		klog.Debugf("SSH agent not available, falling back to private key authentication for Git")
 		if ptfCfg.Git.SSH.PrivateKey == "" {
 			ptfCfg.Git.SSH.PrivateKey = ssh_config.Get(host, "IdentityFile")
-			klog.Debugf("Using Git private key from %s", ptfCfg.Git.SSH.PrivateKey)
 		}
+
+		if ptfCfg.Git.SSH.PrivateKey != "" && strings.HasPrefix(ptfCfg.Git.SSH.PrivateKey, "~/") {
+			expanded, err := expandTilde(ptfCfg.Git.SSH.PrivateKey)
+			if err != nil {
+				return nil, err
+			}
+			ptfCfg.Git.SSH.PrivateKey = expanded
+		}
+
+		klog.Debugf("Using Git private key from %s", ptfCfg.Git.SSH.PrivateKey)
 
 		auth, err := gssh.NewPublicKeysFromFile(user, ptfCfg.Git.SSH.PrivateKey, password)
 		if err != nil {
