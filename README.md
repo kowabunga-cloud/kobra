@@ -115,6 +115,12 @@ toolchain:                            # optional
                                       # and value being package version (use 'latest' if unpinned).
 ```
 
+Note that **kobra.yml** configuration is global at plaform-level, and source of truth for all of your contributors. Consequently, it's not supposed to define user (or contributor) specific parameters (such as path to local files ...).
+
+It is however possible to locally override its global content with a user specific one. One can consequently override it with a custom **.kobra.yml** configuration file, located at the root of platform's repository. If such a file exists, its content will be merged will global one.
+
+**NOTE**: If using local override, do not forget to decalre **.kobra.yml** in your project's **.gitignore** as no one wants local overrides to be part of your Git history.
+
 ## Git Authentication
 
 Note that Kobra will try to connect to Git before doing any deployment action. This is an intended extra security measure to ensure no divergence between your local copy and the remote one. More specifically, it is understood (and allowed) that your local branch can be ahead of origin repository's one, but not the opposite. This is meant to ensure you're not going to deploy a possibly outdated configuration of your platform.

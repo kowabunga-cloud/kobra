@@ -10,7 +10,9 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 
+	"dario.cat/mergo"
 	"github.com/kowabunga-cloud/common/klog"
 	"gopkg.in/yaml.v3"
 )
@@ -142,8 +144,9 @@ type PlatformConfigToolchainAnsible struct {
 }
 
 const (
-	PlatformConfigFile = "kobra.yml"
-	InvalidConfigField = "empty or invalid %s in platform configuration file: '%s'"
+	PlatformConfigFile       = "kobra.yml"
+	PlatformConfigCustomFile = ".kobra.yml"
+	InvalidConfigField       = "empty or invalid %s in platform configuration file: '%s'"
 
 	GitMethodUnknown = ""
 	GitMethodSSH     = "ssh"
@@ -231,21 +234,29 @@ func (p *PlatformConfig) IsValid() error {
 	return nil
 }
 
-func GetPlatformConfigFile() string {
+func getPlatformConfigFile(f string) string {
 	ptfDir, err := LookupPlatformDir()
 	if err != nil {
 		klog.Fatalf("can't find platform directory")
 	}
 
-	return fmt.Sprintf("%s/%s", ptfDir, PlatformConfigFile)
+	return fmt.Sprintf("%s/%s", ptfDir, f)
 }
 
-func GetPlatformConfig() (*PlatformConfig, error) {
+func GetPlatformConfigFile() string {
+	return getPlatformConfigFile(PlatformConfigFile)
+}
+
+func GetPlatformConfigCustomFile() string {
+	return getPlatformConfigFile(PlatformConfigCustomFile)
+}
+
+func readConfigFile(file string) (*PlatformConfig, error) {
 	var cfg PlatformConfig
 
-	f, err := os.Open(GetPlatformConfigFile())
+	f, err := os.Open(filepath.Clean(file)) // #nosec G304
 	if err != nil {
-		errS := fmt.Errorf("platform_configuration: file (%s) does not exist", PlatformConfigFile)
+		errS := fmt.Errorf("platform_configuration: file (%s) does not exist", file)
 		return nil, errS
 	}
 	defer func() {
@@ -263,6 +274,30 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 		e := fmt.Errorf("platform_configuration: unable to unmarshal config (%s)", err)
 		klog.Error(e)
 		return nil, e
+	}
+
+	return &cfg, nil
+}
+
+func GetPlatformConfig() (*PlatformConfig, error) {
+	// read platform's configuration
+	cfg, err := readConfigFile(PlatformConfigFile)
+	if err != nil {
+		return nil, err
+	}
+
+	// now let's see if we have a custom configuration file and merge it with the default one
+	_, err = os.Stat(GetPlatformConfigCustomFile())
+	if err == nil {
+		cfgCustom, err := readConfigFile(PlatformConfigCustomFile)
+		if err != nil {
+			return nil, err
+		}
+
+		err = mergo.Merge(cfg, cfgCustom, mergo.WithOverride, mergo.WithoutDereference)
+		if err != nil {
+			return nil, fmt.Errorf("platform_configuration: unable to merge custom config (%s)", err)
+		}
 	}
 
 	// set default value
@@ -285,5 +320,5 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 		return nil, e
 	}
 
-	return &cfg, nil
+	return cfg, nil
 }
