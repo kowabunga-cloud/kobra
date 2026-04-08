@@ -1,6 +1,6 @@
 module github.com/kowabunga-cloud/kobra
 
-go 1.26.0
+go 1.26.2
 
 require (
 	filippo.io/age v1.3.1
