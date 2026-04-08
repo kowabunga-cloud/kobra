@@ -35,6 +35,19 @@ const (
 	cmdAnsibleDeployExtraVarsDesc = "Ansible extra variables to be set as 'key1=value1 key2=value2' (space-separated)"
 	cmdAnsibleDeployVerboseDesc   = "Enabled extra verbosity"
 	cmdAnsibleDeploySkipDesc      = "Skip Git checks and and run nonetheless."
+
+	cmdAnsibleInventory              = "inventory"
+	cmdAnsibleInventoryActionGraph   = "graph"
+	cmdAnsibleInventoryActionHost    = "host"
+	cmdAnsibleInventoryActionList    = "list"
+	cmdAnsibleInventoryDesc          = "Show Ansible inventory information"
+	cmdAnsibleInventoryPlaybookDesc  = "Playbook to be used (path is auto-searched if unspecified, .yml suffix is optional)"
+	cmdAnsibleInventoryGroupDesc     = "Group to restrict/filter to"
+	cmdAnsibleInventoryHostDesc      = "Host to restrict/filter to"
+	cmdAnsibleInventoryOutputDesc    = "Send the inventory to a file instead of to the screen"
+	cmdAnsibleInventoryExtraVarsDesc = "Ansible extra variables to be set as 'key1=value1 key2=value2' (space-separated)"
+	cmdAnsibleInventoryLimitDesc     = "Limit execution to specific hosts to be set as 'host1,host2...', comma-separated"
+	cmdAnsibleInventoryVerboseDesc   = "Enabled extra verbosity"
 )
 
 var ansibleCmd = &cobra.Command{
@@ -107,8 +120,71 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 	return sub
 }
 
+var ansibleInventorySubCommands = map[string]string{
+	cmdAnsibleInventoryActionGraph: "Create inventory graph",
+	cmdAnsibleInventoryActionHost:  "Output specific host info, works as inventory script",
+	cmdAnsibleInventoryActionList:  "Output all hosts info, works as inventory script",
+}
+
+var ansibleInventoryCmd = &cobra.Command{
+	Use:   cmdAnsibleInventory,
+	Short: cmdAnsibleInventoryDesc,
+}
+
+func NewAnsibleInventorySubCommand(name, desc string) *cobra.Command {
+	var toolchainUpdate bool
+	var ivPlaybook string
+	var ivGroup string
+	var ivHost string
+	var ivOutput string
+	var ivLimit string
+	var ivExtraVars string
+	var ivVerbose bool
+
+	sub := &cobra.Command{
+		Use:   name,
+		Short: desc,
+		Long:  fmt.Sprintf("%s\n  %s", desc, cmdAnsibleFreeArgsDesc),
+		Run: func(cmd *cobra.Command, args []string) {
+			err := RunAnsibleInventory(toolchainUpdate, name, ivPlaybook, ivGroup, ivHost, ivOutput, ivExtraVars, ivLimit, ivVerbose, args)
+			if err != nil {
+				klog.Errorf("error: %s", err)
+				klog.Fatalf(cmdFailureStatus, cmdAnsibleError)
+			}
+		},
+	}
+
+	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
+	sub.Flags().StringVarP(&ivPlaybook, "playbook", "p", "", cmdAnsibleInventoryPlaybookDesc)
+	sub.Flags().StringVarP(&ivExtraVars, "extra-vars", "e", "", cmdAnsibleInventoryExtraVarsDesc)
+	sub.Flags().BoolVarP(&ivVerbose, "verbose", "v", false, cmdAnsibleInventoryVerboseDesc)
+
+	if name == cmdAnsibleInventoryActionGraph {
+		sub.Flags().StringVarP(&ivGroup, "group", "g", "", cmdAnsibleInventoryGroupDesc)
+		sub.Flags().StringVarP(&ivLimit, "limit", "l", "", cmdAnsibleInventoryLimitDesc)
+	}
+
+	if name == cmdAnsibleInventoryActionHost {
+		sub.Flags().StringVarP(&ivHost, "host", "H", "", cmdAnsibleInventoryHostDesc)
+		err := sub.MarkFlagRequired("host")
+		if err != nil {
+			klog.Error(err)
+		}
+	}
+
+	if name == cmdAnsibleInventoryActionList {
+		sub.Flags().StringVarP(&ivOutput, "output-file", "o", "", cmdAnsibleInventoryOutputDesc)
+	}
+
+	return sub
+}
+
 func init() {
 	ansibleCmd.AddCommand(ansiblePullCmd)
 	ansibleCmd.AddCommand(NewAnsibleDeploySubCommand())
+	for sub, desc := range ansibleInventorySubCommands {
+		ansibleInventoryCmd.AddCommand(NewAnsibleInventorySubCommand(sub, desc))
+	}
+	ansibleCmd.AddCommand(ansibleInventoryCmd)
 	RootCmd.AddCommand(ansibleCmd)
 }

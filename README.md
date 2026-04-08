@@ -174,6 +174,16 @@ Kobra supports various environment variables to tune its behavior:
 - **KOBRA_DEBUG=1** would turn maximum verbosity.
 - **KOBRA_NOLOG=1** would completely disable logs.
 
+Ansible deployments being somehow imperative, you won't know the end state before changes are being applied. While it is always *somehow* possible to run deployment in dry-run mode (**kobra deploy -c**), the complete execution flow is not guaranteed.
+
+If you care about planning changes (as you would get with OpenTofu/Terraform for example), it is possible to extract Ansible values as they would be interpreted, to provide pre-flight sanity checks that everything's ordered the way you expect.
+
+A simple way to collect per-host variables interpolation would be:
+
+```sh
+$ kobra ansible inventory host -H machine_hostname -p playbook_name
+```
+
 ## Development Guidelines
 
 Kobra development relies on [pre-commit hooks](http://www.pre-commit.com/) to ensure proper commits.

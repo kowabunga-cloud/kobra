@@ -18,10 +18,11 @@ import (
 )
 
 const (
-	AnsibleBin         = "ansible"
-	AnsiblePlaybookBin = "ansible-playbook"
-	AnsibleGalaxyBin   = "ansible-galaxy"
-	AnsibleConfigFile  = "ansible.cfg"
+	AnsibleBin                  = "ansible"
+	AnsiblePlaybookBin          = "ansible-playbook"
+	AnsiblePlaybookInventoryBin = "ansible-inventory"
+	AnsibleGalaxyBin            = "ansible-galaxy"
+	AnsibleConfigFile           = "ansible.cfg"
 
 	AnsibleIniSection             = "defaults"
 	AnsibleIniCollections         = "collections_paths"
@@ -340,6 +341,115 @@ func runPlaybook(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, i
 	return BinExec(bin, ansibleDir, args, envs)
 }
 
+func runInventory(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, cmd, inventory, pbook, group, host, outputFile, extraVars, limit string, verbose bool, freeArgs []string) error {
+	// find requested binary
+	var bin string
+	var err error
+	if ptfCfg.Toolchain.UseSystem {
+		bin, err = LookupSystemBinary(AnsiblePlaybookInventoryBin)
+	} else {
+		bin, err = LookupPlatformBinary(AnsiblePlaybookInventoryBin)
+	}
+	if err != nil {
+		return err
+	}
+
+	// set environment variables
+	cfgFile := fmt.Sprintf("%s/%s", ansibleDir, AnsibleConfigFile)
+	envs := []string{
+		fmt.Sprintf("ANSIBLE_CONFIG=%s", cfgFile),
+	}
+
+	envSops, sops, err := setSopsEnv(secrets)
+	if err != nil {
+		return err
+	}
+	if sops != "" {
+		defer func() {
+			_ = os.Remove(sops)
+		}()
+	}
+
+	envs = append(envs, envSops...)
+
+	if !ptfCfg.Toolchain.UseSystem {
+		path := os.Getenv("PATH")
+		binDir, err := LookupPlatformBinDir()
+		if err != nil {
+			return err
+		}
+
+		if path != "" {
+			envs = append(envs, fmt.Sprintf("PATH=%s:%s", binDir, path))
+		}
+	}
+
+	// set command-line arguments
+	args := []string{
+		fmt.Sprintf("--%s", cmd),
+	}
+
+	// set group or host, if requested
+	if cmd == cmdAnsibleInventoryActionGraph && group != "" {
+		args = append(args, group)
+	}
+
+	if cmd == cmdAnsibleInventoryActionHost && host != "" {
+		args = append(args, host)
+	}
+
+	// set static inventory file if not specified as part of local configuration
+	if inventory == "" {
+		inv := findInventory(ansibleDir)
+		if inv != "" {
+			args = append(args, "-i")
+			args = append(args, inv)
+		}
+	}
+
+	if pbook != "" {
+		args = append(args, "--playbook-dir")
+		args = append(args, filepath.Dir(pbook))
+	}
+
+	if cmd == cmdAnsibleInventoryActionGraph {
+		args = append(args, "--vars")
+		if limit != "" {
+			args = append(args, "--limit")
+			args = append(args, limit)
+		}
+	}
+
+	if cmd == cmdAnsibleInventoryActionHost {
+		args = append(args, "--yaml")
+	}
+
+	if cmd == cmdAnsibleInventoryActionList {
+		args = append(args, "--yaml")
+		if outputFile != "" {
+			args = append(args, "--output")
+			args = append(args, outputFile)
+		}
+	}
+
+	// check for extra args
+	if extraVars != "" {
+		args = append(args, "--extra-vars")
+		args = append(args, extraVars)
+	}
+
+	// check for verbose output
+	if verbose {
+		args = append(args, "--verbose")
+	}
+
+	// add free args, if any
+	args = append(args, freeArgs...)
+
+	klog.Info("Running Ansible inventory ...")
+	return BinExec(bin, ansibleDir, args, envs)
+}
+
 func RunAnsible(toolchainUpdate bool, playbook string, upgrade, check, bootstrap, listTags bool, tags, skip_tags, extraVars, limit string, verbose, bypass bool, freeArgs []string) error {
 	// get Ansible dir
 	ansibleDir, err := LookupAnsibleDir()
@@ -433,4 +543,51 @@ func RunAnsiblePull() error {
 	}
 
 	return nil
+}
+
+func RunAnsibleInventory(toolchainUpdate bool, cmd, playbook, group, host, outputFile, extraVars, limit string, verbose bool, freeArgs []string) error {
+	// get Ansible dir
+	ansibleDir, err := LookupAnsibleDir()
+	if err != nil {
+		return err
+	}
+
+	// read platform configuration
+	ptfCfg, err := GetPlatformConfig()
+	if err != nil {
+		return err
+	}
+
+	// setup toolchain, if needed
+	err = SetupPlatformToolchain(ptfCfg, toolchainUpdate, ToolchainToolAnsible, ToolchainToolSops)
+	if err != nil {
+		return err
+	}
+
+	// ensure we're in the right place
+	err = ansibleChecks(ansibleDir)
+	if err != nil {
+		return err
+	}
+
+	// read out local Ansible configuration
+	collectionDir, _, inventory, err := readAnsibleConfig(ansibleDir)
+	if err != nil {
+		return err
+	}
+
+	// get secrets
+	secrets, err := GetSecrets(ptfCfg)
+	if err != nil {
+		return err
+	}
+
+	// optional: check if a valid playbook arguement has been passed
+	var pbook string
+	if playbook != "" {
+		pbook, _ = findPlaybook(ansibleDir, collectionDir, playbook)
+	}
+
+	// finally try to run the inventory
+	return runInventory(ptfCfg, secrets, ansibleDir, cmd, inventory, pbook, group, host, outputFile, extraVars, limit, verbose, freeArgs)
 }
