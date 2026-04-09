@@ -10,8 +10,10 @@ import (
 	"fmt"
 	"gopkg.in/ini.v1"
 	"gopkg.in/yaml.v3"
+	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"strings"
 
 	"github.com/kowabunga-cloud/common/klog"
@@ -198,6 +200,31 @@ func playbookTargets(playbook string) ([]PlaybookTarget, error) {
 	}
 
 	return targets, nil
+}
+
+func compilePatterns(patterns []string) (*regexp.Regexp, error) {
+	combined := "(" + strings.Join(patterns, ")|(") + ")"
+	return regexp.Compile(combined)
+}
+
+func walkAndReplace(data any, re *regexp.Regexp, newValue string) any {
+	switch t := data.(type) {
+	case map[string]any:
+		for k, v := range t {
+			// Check if the key matches the regex pattern
+			if re.MatchString(k) {
+				t[k] = newValue
+			} else {
+				// Recurse into nested structures
+				t[k] = walkAndReplace(v, re, newValue)
+			}
+		}
+	case []any:
+		for i, v := range t {
+			t[i] = walkAndReplace(v, re, newValue)
+		}
+	}
+	return data
 }
 
 func runPlaybook(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, inventory, playbook, tags, skip_tags, extraVars, limit string, check, bootstrap, listTags, verbose bool, freeArgs []string) error {
@@ -450,6 +477,111 @@ func runInventory(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, 
 	return BinExec(bin, ansibleDir, args, envs)
 }
 
+func runExport(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, inventory, pbook, out, extraVars string, filters []string, verbose bool, freeArgs []string) error {
+	tmpFile, err := os.CreateTemp("", "kobra-ansible-inventory-*.yml")
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = os.Remove(tmpFile.Name())
+	}()
+	defer func() {
+		_ = tmpFile.Close()
+	}()
+
+	err = runInventory(ptfCfg, secrets, ansibleDir, cmdAnsibleInventoryActionList, inventory, pbook, "", "", tmpFile.Name(), extraVars, "", verbose, freeArgs)
+	if err != nil {
+		return err
+	}
+
+	f, err := os.Open(filepath.Clean(tmpFile.Name())) // #nosec G304
+	if err != nil {
+		return err
+	}
+	defer func() {
+		_ = f.Close()
+	}()
+
+	contents, err := io.ReadAll(f)
+	if err != nil {
+		return err
+	}
+
+	// unmarshal into a generic interface
+	var obj any
+	err = yaml.Unmarshal(contents, &obj)
+	if err != nil {
+		return err
+	}
+
+	// perform the recursive replacement
+	re, err := compilePatterns(filters)
+	if err != nil {
+		return err
+	}
+
+	updatedObj := walkAndReplace(obj, re, "REDACTED")
+
+	// now parse inventory results into a generic map for further processing
+	iv := updatedObj.(map[string]interface{})
+
+	all, ok := iv["all"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("YAML inventory structure is missing 'all' node")
+	}
+
+	children, ok := all["children"].(map[string]interface{})
+	if !ok {
+		return fmt.Errorf("YAML inventory structure is missing 'children' node")
+	}
+
+	// iterate through dynamic groups
+	for groupName, groupData := range children {
+		klog.Debugf("Processing inventory group: %s", groupName)
+
+		groupMap, ok := groupData.(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		hosts, ok := groupMap["hosts"].(map[string]interface{})
+		if !ok {
+			continue
+		}
+
+		//		if filepath.IsAbs(out) {
+
+		outDir := fmt.Sprintf("%s/%s", out, groupName)
+		err := os.MkdirAll(outDir, 0755) // #nosec G301
+		if err != nil {
+			return err
+		}
+
+		// iterate through dynamic hosts
+		for hostName, hostVars := range hosts {
+			klog.Debugf("Extracting variables from %s", hostName)
+
+			// marshal only this host's variables
+			hostYaml, err := yaml.Marshal(hostVars)
+			if err != nil {
+				klog.Errorf("Error marshaling host %s: %v", hostName, err)
+				continue
+			}
+
+			// output to one YAML file per host
+			fileName := fmt.Sprintf("%s/%s.yml", outDir, hostName)
+			err = os.WriteFile(fileName, hostYaml, 0644) // #nosec G306
+			if err != nil {
+				klog.Errorf("Error writing file %s: %v", fileName, err)
+				continue
+			}
+		}
+	}
+	klog.Infof("Exported inventory variables to %s", out)
+
+	return nil
+}
+
 func RunAnsible(toolchainUpdate bool, playbook string, upgrade, check, bootstrap, listTags bool, tags, skip_tags, extraVars, limit string, verbose, bypass bool, freeArgs []string) error {
 	// get Ansible dir
 	ansibleDir, err := LookupAnsibleDir()
@@ -545,7 +677,7 @@ func RunAnsiblePull() error {
 	return nil
 }
 
-func RunAnsibleInventory(toolchainUpdate bool, cmd, playbook, group, host, outputFile, extraVars, limit string, verbose bool, freeArgs []string) error {
+func RunAnsibleInventory(toolchainUpdate bool, cmd, playbook, group, host, out, extraVars, limit string, filters []string, verbose bool, freeArgs []string) error {
 	// get Ansible dir
 	ansibleDir, err := LookupAnsibleDir()
 	if err != nil {
@@ -582,12 +714,23 @@ func RunAnsibleInventory(toolchainUpdate bool, cmd, playbook, group, host, outpu
 		return err
 	}
 
-	// optional: check if a valid playbook arguement has been passed
+	// optional: check if a valid playbook argument has been passed
 	var pbook string
 	if playbook != "" {
 		pbook, _ = findPlaybook(ansibleDir, collectionDir, playbook)
 	}
 
-	// finally try to run the inventory
-	return runInventory(ptfCfg, secrets, ansibleDir, cmd, inventory, pbook, group, host, outputFile, extraVars, limit, verbose, freeArgs)
+	if cmd == cmdAnsibleInventoryActionExport {
+		if !filepath.IsAbs(out) {
+			ptfDir, err := LookupPlatformDir()
+			if err != nil {
+				return err
+			}
+			out = fmt.Sprintf("%s/%s", ptfDir, out)
+		}
+		return runExport(ptfCfg, secrets, ansibleDir, inventory, pbook, out, extraVars, filters, verbose, freeArgs)
+	}
+
+	// fallback to all other actions, finally try to run the inventory
+	return runInventory(ptfCfg, secrets, ansibleDir, cmd, inventory, pbook, group, host, out, extraVars, limit, verbose, freeArgs)
 }

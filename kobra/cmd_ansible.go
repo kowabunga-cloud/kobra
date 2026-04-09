@@ -37,6 +37,7 @@ const (
 	cmdAnsibleDeploySkipDesc      = "Skip Git checks and and run nonetheless."
 
 	cmdAnsibleInventory              = "inventory"
+	cmdAnsibleInventoryActionExport  = "export"
 	cmdAnsibleInventoryActionGraph   = "graph"
 	cmdAnsibleInventoryActionHost    = "host"
 	cmdAnsibleInventoryActionList    = "list"
@@ -45,9 +46,11 @@ const (
 	cmdAnsibleInventoryGroupDesc     = "Group to restrict/filter to"
 	cmdAnsibleInventoryHostDesc      = "Host to restrict/filter to"
 	cmdAnsibleInventoryOutputDesc    = "Send the inventory to a file instead of to the screen"
+	cmdAnsibleInventoryOutputDirDesc = "Directory to output per-host rendered variables"
 	cmdAnsibleInventoryExtraVarsDesc = "Ansible extra variables to be set as 'key1=value1 key2=value2' (space-separated)"
 	cmdAnsibleInventoryLimitDesc     = "Limit execution to specific hosts to be set as 'host1,host2...', comma-separated"
 	cmdAnsibleInventoryVerboseDesc   = "Enabled extra verbosity"
+	cmdAnsibleInventoryFiltersDesc   = "Regexp filters to YAML keys to be considered as sensitive (and exported as redacted). Can be cumulated."
 )
 
 var ansibleCmd = &cobra.Command{
@@ -121,9 +124,10 @@ func NewAnsibleDeploySubCommand() *cobra.Command {
 }
 
 var ansibleInventorySubCommands = map[string]string{
-	cmdAnsibleInventoryActionGraph: "Create inventory graph",
-	cmdAnsibleInventoryActionHost:  "Output specific host info, works as inventory script",
-	cmdAnsibleInventoryActionList:  "Output all hosts info, works as inventory script",
+	cmdAnsibleInventoryActionExport: "Export per-host inventory variables as GitOps-friendly YAML files",
+	cmdAnsibleInventoryActionGraph:  "Create inventory graph",
+	cmdAnsibleInventoryActionHost:   "Output specific host info, works as inventory script",
+	cmdAnsibleInventoryActionList:   "Output all hosts info, works as inventory script",
 }
 
 var ansibleInventoryCmd = &cobra.Command{
@@ -140,13 +144,14 @@ func NewAnsibleInventorySubCommand(name, desc string) *cobra.Command {
 	var ivLimit string
 	var ivExtraVars string
 	var ivVerbose bool
+	var ivFilters []string
 
 	sub := &cobra.Command{
 		Use:   name,
 		Short: desc,
 		Long:  fmt.Sprintf("%s\n  %s", desc, cmdAnsibleFreeArgsDesc),
 		Run: func(cmd *cobra.Command, args []string) {
-			err := RunAnsibleInventory(toolchainUpdate, name, ivPlaybook, ivGroup, ivHost, ivOutput, ivExtraVars, ivLimit, ivVerbose, args)
+			err := RunAnsibleInventory(toolchainUpdate, name, ivPlaybook, ivGroup, ivHost, ivOutput, ivExtraVars, ivLimit, ivFilters, ivVerbose, args)
 			if err != nil {
 				klog.Errorf("error: %s", err)
 				klog.Fatalf(cmdFailureStatus, cmdAnsibleError)
@@ -158,6 +163,16 @@ func NewAnsibleInventorySubCommand(name, desc string) *cobra.Command {
 	sub.Flags().StringVarP(&ivPlaybook, "playbook", "p", "", cmdAnsibleInventoryPlaybookDesc)
 	sub.Flags().StringVarP(&ivExtraVars, "extra-vars", "e", "", cmdAnsibleInventoryExtraVarsDesc)
 	sub.Flags().BoolVarP(&ivVerbose, "verbose", "v", false, cmdAnsibleInventoryVerboseDesc)
+
+	if name == cmdAnsibleInventoryActionExport {
+		sub.Flags().StringVarP(&ivOutput, "output-dir", "o", "", cmdAnsibleInventoryOutputDirDesc)
+		err := sub.MarkFlagRequired("output-dir")
+		if err != nil {
+			klog.Error(err)
+		}
+
+		sub.Flags().StringArrayVarP(&ivFilters, "filters", "f", []string{}, cmdAnsibleInventoryFiltersDesc)
+	}
 
 	if name == cmdAnsibleInventoryActionGraph {
 		sub.Flags().StringVarP(&ivGroup, "group", "g", "", cmdAnsibleInventoryGroupDesc)

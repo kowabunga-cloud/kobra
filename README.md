@@ -184,6 +184,16 @@ A simple way to collect per-host variables interpolation would be:
 $ kobra ansible inventory host -H machine_hostname -p playbook_name
 ```
 
+Keep in mind that all secrets and sensitive variables, if any will be displayed plain-text.
+
+Another approach, more 'GitOps-friendly', is to expose per-host computed into your platform's filesystem, e.g.:
+
+```sh
+$ kobra ansible inventory export -o path/to/gitops/ansible -f '^secret_' -f '^vault_' -p playbook_name
+```
+
+This example will output per-host YAML files into **path/to/gitops/ansible/{group_name}** directory by ensuring that all variables starting with **secret_** or **vault_** prefixes (as defined by regexp) are redacted, as to ensure they can be stored safely on Git. Running this command prior to any actual deployment, associated with **git diff** command will provide you extra insurance that host vars changes, if any, are as expected.
+
 ## Development Guidelines
 
 Kobra development relies on [pre-commit hooks](http://www.pre-commit.com/) to ensure proper commits.
