@@ -28,6 +28,9 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 				},
 				Secrets: PlatformConfigSecrets{
 					Provider: SecretsProviderFile,
+					HCP: PlatformConfigSecretsHCP{
+						AuthMethod: SecretsHCPAuthMethodCredentials,
+					},
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{
@@ -96,6 +99,9 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 				},
 				Secrets: PlatformConfigSecrets{
 					Provider: SecretsProviderEnv,
+					HCP: PlatformConfigSecretsHCP{
+						AuthMethod: SecretsHCPAuthMethodCredentials,
+					},
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{

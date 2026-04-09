@@ -523,14 +523,14 @@ func runExport(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, inv
 	updatedObj := walkAndReplace(obj, re, "REDACTED")
 
 	// now parse inventory results into a generic map for further processing
-	iv := updatedObj.(map[string]interface{})
+	iv := updatedObj.(map[string]any)
 
-	all, ok := iv["all"].(map[string]interface{})
+	all, ok := iv["all"].(map[string]any)
 	if !ok {
 		return fmt.Errorf("YAML inventory structure is missing 'all' node")
 	}
 
-	children, ok := all["children"].(map[string]interface{})
+	children, ok := all["children"].(map[string]any)
 	if !ok {
 		return fmt.Errorf("YAML inventory structure is missing 'children' node")
 	}
@@ -539,12 +539,12 @@ func runExport(ptfCfg *PlatformConfig, secrets *KobraSecretData, ansibleDir, inv
 	for groupName, groupData := range children {
 		klog.Debugf("Processing inventory group: %s", groupName)
 
-		groupMap, ok := groupData.(map[string]interface{})
+		groupMap, ok := groupData.(map[string]any)
 		if !ok {
 			continue
 		}
 
-		hosts, ok := groupMap["hosts"].(map[string]interface{})
+		hosts, ok := groupMap["hosts"].(map[string]any)
 		if !ok {
 			continue
 		}

@@ -82,6 +82,11 @@ secrets:
   hcp:                                # optional, hcp-provider specific
     endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
     mount: string                     # optional, default to "secret" if unspecified
+    auth_method: string               # optional, authentication-method if not token-based, accepts 'credentials' (default) and 'ldap'
+    user_env: string                  # optional, default to "VAULT_USERNAME" if unspecified
+    user_file: string                 # optional, default to "$HOME/.vault-username" if unspecified
+    password_env: string              # optional, default to "VAULT_PASSWORD" if unspecified
+    password_file: string             # optional, default to "$HOME/.vault-password" if unspecified
     token_env: string                 # optional, default to "VAULT_TOKEN" if unspecified
     token_file: string                # optional, default to "$HOME/.vault-token" if unspecified
   master_key_id: string
@@ -166,6 +171,18 @@ Kobra supports different secrets management **providers**:
 - **keyring**: local OS keyring (macOS Keychain, Windows Credentials Manager, Linux Gnome Keyring/KWallet)
 
 **WARNING**: it is highly recommended not to use local secret management backends if secret is to be used by other contributors. When working as a team, always rely on distributed secret management backends.
+
+### Hashicorp Vault
+
+Kobra will try to authenticate to HCP Vault through the following mechanisms, in respective order:
+
+- **VAULT_TOKEN** environment variable existence
+- **$HOME/.vault-token** file existence
+- **VAULT_USERNAME** and **VAULT_PASSWORD** environment variables existence
+- **$HOME/.vault-username** and **$HOME/.vault-password** files existence
+- Ask for token through CLI prompt
+
+Note that first match applies, regardless of its validity (i.e. an existing but expired **VAULT_TOKEN** environment variable will not be retried through next authentication schemes).
 
 ## Tips & Ticks
 

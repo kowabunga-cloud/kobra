@@ -26,23 +26,57 @@ import (
 )
 
 const (
-	VaultEndpointDefault  = "http://127.0.0.1:8200"
-	VaultTokenEnvDefault  = "VAULT_TOKEN"
-	VaultTokenFileDefault = ".vault-token"
-	VaultMasterKeyID      = "kobra_master_key"
-	VaultMountPathDefault = "secret"
-	OneDaySeconds         = (60 * 60 * 24)
-	OneMonthSeconds       = (OneDaySeconds * 30)
+	VaultEndpointDefault     = "http://127.0.0.1:8200"
+	VaultTokenEnvDefault     = "VAULT_TOKEN"
+	VaultTokenFileDefault    = ".vault-token"
+	VaultUsernameEnvDefault  = "VAULT_USERNAME"
+	VaultUsernameFileDefault = ".vault-username"
+	VaultPasswordEnvDefault  = "VAULT_PASSWORD"
+	VaultPasswordFileDefault = ".vault-password"
+	VaultMasterKeyID         = "kobra_master_key"
+	VaultMountPathDefault    = "secret"
+	OneDaySeconds            = (60 * 60 * 24)
+	OneMonthSeconds          = (OneDaySeconds * 30)
 )
 
 type SecretProviderHCP struct {
-	ctx       context.Context
-	Client    *vault.Client
-	ID        string
-	Mount     string
-	Token     string
-	TokenEnv  string
-	TokenFile string
+	ctx          context.Context
+	Client       *vault.Client
+	ID           string
+	Mount        string
+	AuthMethod   string
+	Token        string
+	TokenEnv     string
+	TokenFile    string
+	UsernameEnv  string
+	UsernameFile string
+	PasswordEnv  string
+	PasswordFile string
+}
+
+func (s *SecretProviderHCP) readFromFile(src, dflt string) (string, error) {
+	fileName := src
+	if fileName == dflt {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			return "", err
+		}
+
+		fileName = fmt.Sprintf("%s/%s", home, dflt)
+	}
+	fileName = filepath.Clean(fileName)
+
+	data, err := os.ReadFile(fileName)
+	if err != nil {
+		return "", err
+	}
+
+	res := string(data)
+	res = strings.ReplaceAll(res, "\r\n", "")
+	res = strings.ReplaceAll(res, "\r", "")
+	res = strings.ReplaceAll(res, "\n", "")
+
+	return res, nil
 }
 
 func (s *SecretProviderHCP) isTokenValid() error {
@@ -71,38 +105,83 @@ func (s *SecretProviderHCP) isTokenValid() error {
 	return nil
 }
 
+func (s *SecretProviderHCP) UserpassLogin(username, password string) error {
+	var resp *vault.Response[map[string]any]
+	var err error
+
+	switch s.AuthMethod {
+	case SecretsHCPAuthMethodLdap:
+		resp, err = s.Client.Auth.LdapLogin(s.ctx, username, schema.LdapLoginRequest{
+			Password: password,
+		})
+	default:
+		resp, err = s.Client.Auth.UserpassLogin(s.ctx, username, schema.UserpassLoginRequest{
+			Password: password,
+		})
+	}
+
+	if err != nil {
+		return err
+	}
+
+	s.Token = resp.Auth.ClientToken
+
+	return nil
+}
+
 func (s *SecretProviderHCP) Login() error {
-	// try to find Vault's token from environment variable
+	var err error
+
+	// Try #1: Environment variable for token
+	klog.Debugf("Trying Vault token-authentication from environment variable")
 	data, ok := os.LookupEnv(s.TokenEnv)
 	if ok {
 		s.Token = data
 	}
 
-	// not found, try to find Vault's token from file
+	// Try #2: File for token
 	if s.Token == "" {
-		fileName := s.TokenFile
-		if fileName == VaultTokenFileDefault {
-			home, err := os.UserHomeDir()
-			if err != nil {
-				return err
-			}
-
-			fileName = fmt.Sprintf("%s/%s", home, VaultTokenFileDefault)
-		}
-		fileName = filepath.Clean(fileName)
-
-		data, err := os.ReadFile(fileName)
-		if err == nil {
-			s.Token = string(data)
-			s.Token = strings.ReplaceAll(s.Token, "\r\n", "")
-			s.Token = strings.ReplaceAll(s.Token, "\r", "")
-			s.Token = strings.ReplaceAll(s.Token, "\n", "")
+		klog.Debugf("Trying Vault token-authentication from file")
+		s.Token, err = s.readFromFile(s.TokenFile, VaultTokenFileDefault)
+		if err != nil && !os.IsNotExist(err) {
+			return err
 		}
 	}
 
-	// still not found, ask for it
+	// Try #3: Environment variables for username and password
 	if s.Token == "" {
-		var err error
+		klog.Debugf("Trying Vault user/pass-authentication from environment variable")
+		username, usernameOk := os.LookupEnv(s.UsernameEnv)
+		password, passwordOk := os.LookupEnv(s.PasswordEnv)
+		if usernameOk && passwordOk {
+			err = s.UserpassLogin(username, password)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Try #4: username and password from files
+	if s.Token == "" {
+		klog.Debugf("Trying Vault user/pass-authentication from files")
+		username, err := s.readFromFile(s.UsernameFile, VaultUsernameFileDefault)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		password, err := s.readFromFile(s.PasswordFile, VaultPasswordFileDefault)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		err = s.UserpassLogin(username, password)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Try #5: still not found, ask for it
+	if s.Token == "" {
 		s.Token, err = prompt.New().Ask("Unlock Vault's token:").
 			Input("", input.WithEchoMode(input.EchoPassword))
 		if err != nil {
@@ -114,7 +193,7 @@ func (s *SecretProviderHCP) Login() error {
 		}
 	}
 
-	err := s.Client.SetToken(s.Token)
+	err = s.Client.SetToken(s.Token)
 	if err != nil {
 		return err
 	}
@@ -124,7 +203,8 @@ func (s *SecretProviderHCP) Login() error {
 		return err
 	}
 
-	return nil
+	// cascade the environment variable to children processes
+	return os.Setenv("VAULT_TOKEN", s.Token)
 }
 
 func (s *SecretProviderHCP) PostFlight() error {
@@ -168,6 +248,11 @@ func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
 		mount = VaultMountPathDefault
 	}
 
+	authMethod := ptfCfg.Secrets.HCP.AuthMethod
+	if authMethod == "" {
+		authMethod = SecretsHCPAuthMethodCredentials
+	}
+
 	tokenEnv := ptfCfg.Secrets.HCP.TokenEnv
 	if tokenEnv == "" {
 		tokenEnv = VaultTokenEnvDefault
@@ -176,6 +261,26 @@ func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
 	tokenFile := ptfCfg.Secrets.HCP.TokenFile
 	if tokenFile == "" {
 		tokenFile = VaultTokenFileDefault
+	}
+
+	usernameEnv := ptfCfg.Secrets.HCP.UsernameEnv
+	if usernameEnv == "" {
+		usernameEnv = VaultUsernameEnvDefault
+	}
+
+	usernameFile := ptfCfg.Secrets.HCP.UsernameFile
+	if usernameFile == "" {
+		usernameFile = VaultUsernameFileDefault
+	}
+
+	passwordEnv := ptfCfg.Secrets.HCP.PasswordEnv
+	if passwordEnv == "" {
+		passwordEnv = VaultPasswordEnvDefault
+	}
+
+	passwordFile := ptfCfg.Secrets.HCP.PasswordFile
+	if passwordFile == "" {
+		passwordFile = VaultPasswordFileDefault
 	}
 
 	client, err := vault.New(
@@ -187,11 +292,16 @@ func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
 	}
 
 	return &SecretProviderHCP{
-		ctx:       context.Background(),
-		Client:    client,
-		Mount:     mount,
-		TokenEnv:  tokenEnv,
-		TokenFile: tokenFile,
-		ID:        ptfCfg.Secrets.MasterKeyID,
+		ctx:          context.Background(),
+		Client:       client,
+		Mount:        mount,
+		AuthMethod:   authMethod,
+		TokenEnv:     tokenEnv,
+		TokenFile:    tokenFile,
+		UsernameEnv:  usernameEnv,
+		UsernameFile: usernameFile,
+		PasswordEnv:  passwordEnv,
+		PasswordFile: passwordFile,
+		ID:           ptfCfg.Secrets.MasterKeyID,
 	}, nil
 }
