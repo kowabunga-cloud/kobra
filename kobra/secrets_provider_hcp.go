@@ -8,8 +8,10 @@ package kobra
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
+	"net/http"
 	"os"
 	"path/filepath"
 	"strings"
@@ -29,15 +31,44 @@ const (
 	VaultTokenFileDefault = ".vault-token"
 	VaultMasterKeyID      = "kobra_master_key"
 	VaultMountPathDefault = "secret"
+	OneDaySeconds         = (60 * 60 * 24)
+	OneMonthSeconds       = (OneDaySeconds * 30)
 )
 
 type SecretProviderHCP struct {
+	ctx       context.Context
 	Client    *vault.Client
 	ID        string
 	Mount     string
 	Token     string
 	TokenEnv  string
 	TokenFile string
+}
+
+func (s *SecretProviderHCP) isTokenValid() error {
+	resp, err := s.Client.Auth.TokenLookUpSelf(s.ctx)
+	if err != nil {
+		if vault.IsErrorStatus(err, http.StatusForbidden) {
+			klog.Errorf("HCP Vault token is invalid, does not have permissions or is expired")
+		}
+		return err
+	}
+
+	klog.Debugf("Vault token is valid until %s", resp.Data["expire_time"])
+
+	ttl, err := resp.Data["ttl"].(json.Number).Int64()
+	if err != nil {
+		return err
+	}
+
+	if ttl < OneMonthSeconds {
+		klog.Warningf("Vault token is about to expire in less than a month, please renew it soon")
+	}
+	if ttl < OneDaySeconds {
+		klog.Errorf("Vault token is about to expire in less than a day, please renew it soon")
+	}
+
+	return nil
 }
 
 func (s *SecretProviderHCP) Login() error {
@@ -83,7 +114,17 @@ func (s *SecretProviderHCP) Login() error {
 		}
 	}
 
-	return s.Client.SetToken(s.Token)
+	err := s.Client.SetToken(s.Token)
+	if err != nil {
+		return err
+	}
+
+	err = s.isTokenValid()
+	if err != nil {
+		return err
+	}
+
+	return nil
 }
 
 func (s *SecretProviderHCP) PostFlight() error {
@@ -93,6 +134,7 @@ func (s *SecretProviderHCP) PostFlight() error {
 func (s *SecretProviderHCP) Get() (string, error) {
 	r, err := s.Client.Secrets.KvV2Read(context.Background(), s.ID, vault.WithMountPath(s.Mount))
 	if err != nil {
+		klog.Errorf("Failed to read secret from Vault: %s", err)
 		return "", err
 	}
 
@@ -107,7 +149,12 @@ func (s *SecretProviderHCP) Set(secret string) error {
 		vault.WithMountPath(s.Mount),
 	)
 
-	return err
+	if err != nil {
+		klog.Errorf("Failed to write secret to Vault: %s", err)
+		return err
+	}
+
+	return nil
 }
 
 func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
@@ -140,6 +187,7 @@ func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
 	}
 
 	return &SecretProviderHCP{
+		ctx:       context.Background(),
 		Client:    client,
 		Mount:     mount,
 		TokenEnv:  tokenEnv,
