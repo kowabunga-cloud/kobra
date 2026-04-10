@@ -36,7 +36,7 @@ const (
 	VaultMasterKeyID         = "kobra_master_key"
 	VaultMountPathDefault    = "secret"
 	OneDaySeconds            = (60 * 60 * 24)
-	OneMonthSeconds          = (OneDaySeconds * 30)
+	OneWeekSeconds           = (OneDaySeconds * 7)
 )
 
 type SecretProviderHCP struct {
@@ -95,7 +95,7 @@ func (s *SecretProviderHCP) isTokenValid() error {
 		return err
 	}
 
-	if ttl < OneMonthSeconds {
+	if ttl < OneWeekSeconds {
 		klog.Warningf("Vault token is about to expire in less than a month, please renew it soon")
 	}
 	if ttl < OneDaySeconds {
