@@ -90,6 +90,10 @@ secrets:
     token_env: string                 # optional, default to "VAULT_TOKEN" if unspecified
     token_file: string                # optional, default to "$HOME/.vault-token" if unspecified
   master_key_id: string
+  sync_maps:                          # optional, list of mapped local/remote secrets, defaults to [], when supported by secrets provider (currently 'hcp' only)
+    - path: string                    # optional, path to secret, default one if unspecified.
+      secret: string                  # path to mapped secret in remote secret's provider
+      sops_file: string               # path to plaform local SOPS encrypted secrets file
 ssh:                                  # optional
   remote:                             # remote servers SSH connection parameters
     user: string                      # username to be used
@@ -171,6 +175,12 @@ Kobra supports different secrets management **providers**:
 - **keyring**: local OS keyring (macOS Keychain, Windows Credentials Manager, Linux Gnome Keyring/KWallet)
 
 **WARNING**: it is highly recommended not to use local secret management backends if secret is to be used by other contributors. When working as a team, always rely on distributed secret management backends.
+
+On supported providers (currently only **hcp**), Kobra has optional support for 2-ways sync maps. This allows keep local SOPS-encrypted secrets in sync with remote secrets-provider hosted ones. This comes in handy when you're having a proper GitOps approach with [External Secrets Manager](https://external-secrets.io/latest/) for example and yet want to keep the convenience of using **kobra secrets edit** command to simply edit our secrets.
+
+Note that synchronization is both-ways and takes both content and last modified timestamp to determine precedence. If local SOPS file is more up-to-date, remote one will be updated. If remote one has been modified, changes will be fetched into local one prior to any edition.
+
+**WARNING**: Only YAML files are supported with single-depth (i.e. non-nested)
 
 ### Hashicorp Vault
 

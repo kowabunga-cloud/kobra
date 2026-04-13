@@ -129,6 +129,10 @@ func (s *SecretProviderHCP) UserpassLogin(username, password string) error {
 	return nil
 }
 
+func (s *SecretProviderHCP) IsSupported(feature string) bool {
+	return feature == SecretsFeatureSyncMap
+}
+
 func (s *SecretProviderHCP) Login() error {
 	var err error
 
@@ -212,7 +216,7 @@ func (s *SecretProviderHCP) PostFlight() error {
 }
 
 func (s *SecretProviderHCP) Get() (string, error) {
-	r, err := s.Client.Secrets.KvV2Read(context.Background(), s.ID, vault.WithMountPath(s.Mount))
+	r, err := s.Client.Secrets.KvV2Read(s.ctx, s.ID, vault.WithMountPath(s.Mount))
 	if err != nil {
 		klog.Errorf("Failed to read secret from Vault: %s", err)
 		return "", err
@@ -222,12 +226,62 @@ func (s *SecretProviderHCP) Get() (string, error) {
 }
 
 func (s *SecretProviderHCP) Set(secret string) error {
-	_, err := s.Client.Secrets.KvV2Write(context.Background(), s.ID, schema.KvV2WriteRequest{
+	_, err := s.Client.Secrets.KvV2Write(s.ctx, s.ID, schema.KvV2WriteRequest{
 		Data: map[string]any{
 			VaultMasterKeyID: secret,
 		}},
 		vault.WithMountPath(s.Mount),
 	)
+
+	if err != nil {
+		klog.Errorf("Failed to write secret to Vault: %s", err)
+		return err
+	}
+
+	return nil
+}
+
+func (s *SecretProviderHCP) LastMod(path, secret string) (time.Time, error) {
+	if path == "" {
+		path = s.Mount
+	}
+
+	resp, err := s.Client.Secrets.KvV2ReadMetadata(s.ctx, secret, vault.WithMountPath(path))
+	if err != nil {
+		return time.Time{}, err
+	}
+
+	t, err := time.Parse(time.RFC3339, resp.Data.UpdatedTime.Format(time.RFC3339))
+	if err != nil {
+		return time.Time{}, fmt.Errorf("found secret but failed to parse date: %w", err)
+	}
+
+	return t, nil
+}
+
+func (s *SecretProviderHCP) Read(path, secret string) (map[string]any, error) {
+	if path == "" {
+		path = s.Mount
+	}
+
+	r, err := s.Client.Secrets.KvV2Read(s.ctx, secret, vault.WithMountPath(path))
+	if err != nil {
+		klog.Errorf("Failed to read secret to Vault: %s", err)
+		return map[string]any{}, err
+	}
+
+	return r.Data.Data, nil
+}
+
+func (s *SecretProviderHCP) Write(path, secret string, payload map[string]any) error {
+	if path == "" {
+		path = s.Mount
+	}
+
+	_, err := s.Client.Secrets.KvV2Write(s.ctx, secret, schema.KvV2WriteRequest{
+		Data: payload,
+	},
+		vault.WithMountPath(path))
 
 	if err != nil {
 		klog.Errorf("Failed to write secret to Vault: %s", err)

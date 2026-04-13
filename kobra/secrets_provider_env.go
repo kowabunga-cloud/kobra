@@ -9,6 +9,7 @@ package kobra
 import (
 	"fmt"
 	"os"
+	"time"
 
 	"github.com/kowabunga-cloud/common/klog"
 )
@@ -19,6 +20,10 @@ const (
 
 type SecretProviderEnv struct {
 	EnvVar string
+}
+
+func (s *SecretProviderEnv) IsSupported(feature string) bool {
+	return false
 }
 
 func (s *SecretProviderEnv) Login() error {
@@ -41,6 +46,18 @@ func (s *SecretProviderEnv) Get() (string, error) {
 func (s *SecretProviderEnv) Set(secret string) error {
 	klog.Infof("Please ensure to set the following environment variable into your shell's configuration:")
 	klog.Infof("  export %s=%s", s.EnvVar, secret)
+	return nil
+}
+
+func (s *SecretProviderEnv) LastMod(path, secret string) (time.Time, error) {
+	return time.Time{}, nil
+}
+
+func (s *SecretProviderEnv) Read(path, secret string) (map[string]any, error) {
+	return map[string]any{}, nil
+}
+
+func (s *SecretProviderEnv) Write(path, secret string, payload map[string]any) error {
 	return nil
 }
 

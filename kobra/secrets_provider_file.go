@@ -11,10 +11,15 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"time"
 )
 
 type SecretProviderFile struct {
 	Filename string
+}
+
+func (s *SecretProviderFile) IsSupported(feature string) bool {
+	return false
 }
 
 func (s *SecretProviderFile) Login() error {
@@ -36,6 +41,18 @@ func (s *SecretProviderFile) Get() (string, error) {
 
 func (s *SecretProviderFile) Set(secret string) error {
 	return os.WriteFile(s.Filename, []byte(secret), 0600)
+}
+
+func (s *SecretProviderFile) LastMod(path, secret string) (time.Time, error) {
+	return time.Time{}, nil
+}
+
+func (s *SecretProviderFile) Read(path, secret string) (map[string]any, error) {
+	return map[string]any{}, nil
+}
+
+func (s *SecretProviderFile) Write(path, secret string, payload map[string]any) error {
+	return nil
 }
 
 func NewSecretProviderFile(ptfCfg *PlatformConfig) (*SecretProviderFile, error) {

@@ -48,12 +48,13 @@ type PlatformConfigGitHTTP struct {
 
 // PlatformConfigSecrets contains secrets-specific configuration
 type PlatformConfigSecrets struct {
-	Provider    string                    `yaml:"provider"`
-	MasterKeyID string                    `yaml:"master_key_id"`
-	AWS         PlatformConfigSecretsAWS  `yaml:"aws,omitempty"`
-	Env         PlatformConfigSecretsEnv  `yaml:"env,omitempty"`
-	File        PlatformConfigSecretsFile `yaml:"file,omitempty"`
-	HCP         PlatformConfigSecretsHCP  `yaml:"hcp,omitempty"`
+	Provider    string                         `yaml:"provider"`
+	MasterKeyID string                         `yaml:"master_key_id"`
+	SyncMaps    []PlatformConfigSecretsSyncMap `yaml:"sync_maps,omitempty"`
+	AWS         PlatformConfigSecretsAWS       `yaml:"aws,omitempty"`
+	Env         PlatformConfigSecretsEnv       `yaml:"env,omitempty"`
+	File        PlatformConfigSecretsFile      `yaml:"file,omitempty"`
+	HCP         PlatformConfigSecretsHCP       `yaml:"hcp,omitempty"`
 }
 
 // PlatformConfigSSH contains ssh-specific configuration
@@ -66,6 +67,13 @@ type PlatformConfigSSH struct {
 type PlatformConfigSshConfig struct {
 	User    string `yaml:"user"`
 	KeyFile string `yaml:"key_file"`
+}
+
+// PlatformConfigSecretsSyncMap contains local-remote secrets syncrhonization mappings
+type PlatformConfigSecretsSyncMap struct {
+	Path     string `yaml:"path,omitempty"`
+	Secret   string `yaml:"secret"`
+	SopsFile string `yaml:"sops_file"`
 }
 
 // PlatformConfigSecretsAWS contains AWS Secrets Manager secrets-specific configuration

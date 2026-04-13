@@ -20,6 +20,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 
 	"github.com/getsops/sops/v3"
 	"github.com/getsops/sops/v3/aes"
@@ -32,6 +33,7 @@ import (
 	"github.com/getsops/sops/v3/keyservice"
 	"github.com/getsops/sops/v3/stores"
 	vers "github.com/getsops/sops/v3/version"
+	"gopkg.in/yaml.v3"
 
 	"github.com/google/shlex"
 	"github.com/mitchellh/go-wordwrap"
@@ -91,6 +93,37 @@ type runEditorUntilOkOpts struct {
 	OriginalHash []byte
 	InputStore   sops.Store
 	Tree         *sops.Tree
+}
+
+// SopsMetadata represents the internal structure of the SOPS block
+type SopsMetadata struct {
+	Sops struct {
+		LastModified string `yaml:"lastmodified"`
+	} `yaml:"sops"`
+}
+
+func getSopsLastModified(fp string) (time.Time, bool, error) {
+	data, err := os.ReadFile(fp) // #nosec G304
+	if err != nil {
+		return time.Time{}, false, err
+	}
+
+	var meta SopsMetadata
+	err = yaml.Unmarshal(data, &meta)
+	if err != nil {
+		return time.Time{}, false, fmt.Errorf("failed to parse YAML: %w", err)
+	}
+
+	if meta.Sops.LastModified == "" {
+		return time.Time{}, false, nil // File is not SOPS encrypted
+	}
+
+	t, err := time.Parse(time.RFC3339, meta.Sops.LastModified)
+	if err != nil {
+		return time.Time{}, true, fmt.Errorf("found SOPS but failed to parse date: %w", err)
+	}
+
+	return t, true, nil
 }
 
 type fileAlreadyEncryptedError struct{}
@@ -447,7 +480,7 @@ func defaultStore(path string) common.Store {
 	return common.DefaultStoreForPathOrFormat(config.NewStoresConfig(), path, "")
 }
 
-func SopsViewFile(file string) error {
+func sopsDecodefile(file string, out *os.File) error {
 	keyFile, err := secretsSopsSetEnv()
 	if err != nil {
 		return err
@@ -468,9 +501,14 @@ func SopsViewFile(file string) error {
 		return err
 	}
 
-	_, err = os.Stdout.Write(data)
+	_, err = out.Write(data)
 
 	return err
+
+}
+
+func SopsViewFile(file string) error {
+	return sopsDecodefile(file, os.Stdout)
 }
 
 func SopsEditFile(file string) error {

@@ -7,6 +7,8 @@
 package kobra
 
 import (
+	"time"
+
 	"github.com/99designs/keyring"
 )
 
@@ -17,6 +19,10 @@ const (
 type SecretProviderKeyring struct {
 	Keyring keyring.Keyring
 	ID      string
+}
+
+func (s *SecretProviderKeyring) IsSupported(feature string) bool {
+	return false
 }
 
 func (s *SecretProviderKeyring) Login() error {
@@ -41,6 +47,18 @@ func (s *SecretProviderKeyring) Set(secret string) error {
 		Key:  s.ID,
 		Data: []byte(secret),
 	})
+}
+
+func (s *SecretProviderKeyring) LastMod(path, secret string) (time.Time, error) {
+	return time.Time{}, nil
+}
+
+func (s *SecretProviderKeyring) Read(path, secret string) (map[string]any, error) {
+	return map[string]any{}, nil
+}
+
+func (s *SecretProviderKeyring) Write(path, secret string, payload map[string]any) error {
+	return nil
 }
 
 func NewSecretProviderKeyring(ptfCfg *PlatformConfig) (*SecretProviderKeyring, error) {
