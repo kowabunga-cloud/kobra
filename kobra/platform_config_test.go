@@ -336,6 +336,203 @@ func TestIsSupportedTfProvider(t *testing.T) {
 	}
 }
 
+func TestIsSupportedSecretsHcpAuthMethod(t *testing.T) {
+	tests := []struct {
+		method   string
+		expected bool
+	}{
+		{SecretsHCPAuthMethodCredentials, true},
+		{SecretsHCPAuthMethodLdap, true},
+		{"invalid", false},
+		{"basic", false},
+		{"", false},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.method, func(t *testing.T) {
+			result := isSupportedSecretsHcpAuthMethod(tt.method)
+			if result != tt.expected {
+				t.Errorf("expected %v for method %q, got %v", tt.expected, tt.method, result)
+			}
+		})
+	}
+}
+
+func TestPlatformConfig_IsValid_HCPAuthMethod(t *testing.T) {
+	tests := []struct {
+		name       string
+		authMethod string
+		expectErr  bool
+	}{
+		{"valid credentials", SecretsHCPAuthMethodCredentials, false},
+		{"valid ldap", SecretsHCPAuthMethodLdap, false},
+		{"invalid method", "basic", true},
+		{"empty method", "", true},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			cfg := &PlatformConfig{
+				Git: PlatformConfigGit{Method: GitMethodSSH},
+				Secrets: PlatformConfigSecrets{
+					Provider: SecretsProviderFile,
+					HCP:      PlatformConfigSecretsHCP{AuthMethod: tt.authMethod},
+				},
+				Toolchain: PlatformConfigToolchain{
+					TF: PlatformConfigToolchainTF{Provider: TfProviderOpenTofu},
+				},
+			}
+			err := cfg.IsValid()
+			if tt.expectErr && err == nil {
+				t.Error("expected error, got nil")
+			}
+			if !tt.expectErr && err != nil {
+				t.Errorf("unexpected error: %v", err)
+			}
+		})
+	}
+}
+
+func TestPlatformConfigSecretsSyncMap_YAML(t *testing.T) {
+	config := &PlatformConfig{
+		Secrets: PlatformConfigSecrets{
+			Provider: SecretsProviderHCP,
+			SyncMaps: []PlatformConfigSecretsSyncMap{
+				{
+					Path:     "my-mount",
+					Secret:   "my-secret",
+					SopsFile: "secrets/my-secret.sops.yml",
+				},
+				{
+					Secret:   "another-secret",
+					SopsFile: "secrets/another.sops.yml",
+				},
+			},
+		},
+	}
+
+	data, err := yaml.Marshal(config)
+	if err != nil {
+		t.Fatalf("failed to marshal config: %v", err)
+	}
+
+	var decoded PlatformConfig
+	err = yaml.Unmarshal(data, &decoded)
+	if err != nil {
+		t.Fatalf("failed to unmarshal config: %v", err)
+	}
+
+	if len(decoded.Secrets.SyncMaps) != 2 {
+		t.Fatalf("expected 2 sync maps, got %d", len(decoded.Secrets.SyncMaps))
+	}
+
+	first := decoded.Secrets.SyncMaps[0]
+	if first.Path != "my-mount" {
+		t.Errorf("expected Path=%q, got %q", "my-mount", first.Path)
+	}
+	if first.Secret != "my-secret" {
+		t.Errorf("expected Secret=%q, got %q", "my-secret", first.Secret)
+	}
+	if first.SopsFile != "secrets/my-secret.sops.yml" {
+		t.Errorf("expected SopsFile=%q, got %q", "secrets/my-secret.sops.yml", first.SopsFile)
+	}
+
+	second := decoded.Secrets.SyncMaps[1]
+	if second.Path != "" {
+		t.Errorf("expected empty Path for second sync map, got %q", second.Path)
+	}
+	if second.Secret != "another-secret" {
+		t.Errorf("expected Secret=%q, got %q", "another-secret", second.Secret)
+	}
+}
+
+func TestGetPlatformConfig_WithCustomConfig(t *testing.T) {
+	tmpDir := t.TempDir()
+	origWd, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origWd) }()
+
+	platformRoot := filepath.Join(tmpDir, "test_platform_custom")
+	ansibleDir := filepath.Join(platformRoot, AnsibleDirName)
+	err := os.MkdirAll(ansibleDir, 0755)
+	if err != nil {
+		t.Fatalf("failed to create ansible dir: %v", err)
+	}
+	_ = os.Chdir(platformRoot)
+
+	baseCfg := &PlatformConfig{
+		Git: PlatformConfigGit{Method: GitMethodSSH},
+		Secrets: PlatformConfigSecrets{
+			Provider:    SecretsProviderFile,
+			MasterKeyID: "base-key-id",
+		},
+		Toolchain: PlatformConfigToolchain{
+			TF: PlatformConfigToolchainTF{
+				Provider: TfProviderOpenTofu,
+				Version:  "1.0.0",
+			},
+		},
+	}
+
+	baseData, err := yaml.Marshal(baseCfg)
+	if err != nil {
+		t.Fatalf("failed to marshal base config: %v", err)
+	}
+	err = os.WriteFile(filepath.Join(platformRoot, PlatformConfigFile), baseData, 0644)
+	if err != nil {
+		t.Fatalf("failed to write base config: %v", err)
+	}
+
+	// Custom config overrides MasterKeyID only
+	customCfg := &PlatformConfig{
+		Secrets: PlatformConfigSecrets{
+			Provider:    SecretsProviderFile,
+			MasterKeyID: "custom-key-id",
+		},
+	}
+	customData, err := yaml.Marshal(customCfg)
+	if err != nil {
+		t.Fatalf("failed to marshal custom config: %v", err)
+	}
+	err = os.WriteFile(filepath.Join(platformRoot, PlatformConfigCustomFile), customData, 0644)
+	if err != nil {
+		t.Fatalf("failed to write custom config: %v", err)
+	}
+
+	cfg, err := GetPlatformConfig()
+	if err != nil {
+		t.Fatalf("unexpected error: %v", err)
+	}
+
+	if cfg.Secrets.MasterKeyID != "custom-key-id" {
+		t.Errorf("expected MasterKeyID to be overridden to %q, got %q", "custom-key-id", cfg.Secrets.MasterKeyID)
+	}
+	if cfg.Git.Method != GitMethodSSH {
+		t.Errorf("expected Git.Method=%q from base config, got %q", GitMethodSSH, cfg.Git.Method)
+	}
+}
+
+func TestGetPlatformConfigCustomFile(t *testing.T) {
+	tmpDir := t.TempDir()
+	origWd, _ := os.Getwd()
+	defer func() { _ = os.Chdir(origWd) }()
+
+	platformRoot := filepath.Join(tmpDir, "test_platform_custom_file")
+	ansibleDir := filepath.Join(platformRoot, AnsibleDirName)
+	err := os.MkdirAll(ansibleDir, 0755)
+	if err != nil {
+		t.Fatalf("failed to create ansible dir: %v", err)
+	}
+	_ = os.Chdir(platformRoot)
+
+	customFile := GetPlatformConfigCustomFile()
+	expected := filepath.Join(platformRoot, PlatformConfigCustomFile)
+	expectedAbs, _ := filepath.EvalSymlinks(expected)
+	customFileAbs, _ := filepath.EvalSymlinks(customFile)
+	if customFileAbs != expectedAbs {
+		t.Errorf("expected %q, got %q", expectedAbs, customFileAbs)
+	}
+}
+
 func TestPlatformConfigYAMLMarshaling(t *testing.T) {
 	config := &PlatformConfig{
 		Git: PlatformConfigGit{
