@@ -2,6 +2,29 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.0](https://github.com/kowabunga-cloud/kobra/compare/v0.4.2...v0.5.0) (2026-04-14)
+
+### Bug Fixes
+
+* use correct protocol check in git operations ([4ef2e7a](https://github.com/kowabunga-cloud/kobra/commit/4ef2e7ac1a012ff2dbbcbded79ee6ae3c973fce2))
+* vault should display a token expiration warning under a week, not a month ([97ce189](https://github.com/kowabunga-cloud/kobra/commit/97ce189fdb5adcb5a52bdbdb9ba9a78c99b63f95))
+
+### Chores
+
+* extend HCP Vault error handling and message and add token validation ([1316d0b](https://github.com/kowabunga-cloud/kobra/commit/1316d0b1aca18f253f07b7db4f486f8ca34d4190))
+* extend unit tests ([dbbd649](https://github.com/kowabunga-cloud/kobra/commit/dbbd649f80d812b41947d1ede283cc1c65a48bcd))
+* require go 1.26.2 ([fd2165a](https://github.com/kowabunga-cloud/kobra/commit/fd2165aedf727050b51703372cec5b7ba88e4186))
+* upgrade go-git to v6 ([0afeba6](https://github.com/kowabunga-cloud/kobra/commit/0afeba65ea0d2857809eac9d8d6bdb532518c61c))
+
+### Features
+
+* add support for traditional username/password login for HCP Vault (token-auth remains default choice) ([e959006](https://github.com/kowabunga-cloud/kobra/commit/e959006e3e40a46d7f8951aee05873a8f12ceae6))
+* extend ansible command with 'export' sub-command to provide per-host computed variables output with regexp-based support for filtered/redacted sensitive variables ([b5141f1](https://github.com/kowabunga-cloud/kobra/commit/b5141f1ae29413e82df84e6f771fbe73f04eb77e))
+* extend ansible wrapper with 'inventory' sub-commands ([ec8c48f](https://github.com/kowabunga-cloud/kobra/commit/ec8c48ff4bc1bb8f83978e0d390068a5b207fc58))
+* introduce 2-ways secrets synchronization maps (local sops-encrypted files to remote secrets provider) ([baf3740](https://github.com/kowabunga-cloud/kobra/commit/baf374030e7340e9f414f096a2abc6ed8c465d8a))
+* introduce support for local platform configuration override ([4d5e731](https://github.com/kowabunga-cloud/kobra/commit/4d5e73197db54086fb3f82295ad6912d6225d3d4))
+* use ssh-agent git authentication, when available, and local ssh config file as a fallback (also support path expansion for IdentityFile parameter) ([5a4f0a2](https://github.com/kowabunga-cloud/kobra/commit/5a4f0a27c2aa8db320a09443a863654f603777d5))
+
 ## [0.4.2](https://github.com/kowabunga-cloud/kobra/compare/v0.4.1...v0.4.2) (2026-04-07)
 
 ### Chores
