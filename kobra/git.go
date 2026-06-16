@@ -15,6 +15,7 @@ import (
 	"github.com/go-git/go-git/v6"
 	"github.com/go-git/go-git/v6/config"
 	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/client"
 	"github.com/go-git/go-git/v6/plumbing/object"
 	"github.com/go-git/go-git/v6/plumbing/revlist"
 	"github.com/go-git/go-git/v6/plumbing/transport"
@@ -64,8 +65,8 @@ func revListCount(r *git.Repository, from, to *plumbing.Reference) (int, error) 
 	return len(commits), nil
 }
 
-func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
-	ep, err := transport.NewEndpoint(url)
+func gitAuth(ptfCfg *PlatformConfig, url string) (client.Option, error) {
+	ep, err := transport.ParseURL(url)
 	if err != nil {
 		return nil, err
 	}
@@ -119,7 +120,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 			}
 
 			auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
-			return auth, nil
+			return client.WithSSHAuth(auth), nil
 		}
 
 		// fallback to private key authentication
@@ -143,7 +144,7 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 			return nil, err
 		}
 		auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
-		return auth, nil
+		return client.WithSSHAuth(auth), nil
 	case GitMethodHTTP:
 		if ptfCfg.Git.HTTP.Token != "" {
 			// The intended use of a GitHub personal access token is in replace of your password
@@ -153,10 +154,10 @@ func gitAuth(ptfCfg *PlatformConfig, url string) (transport.AuthMethod, error) {
 			password = ptfCfg.Git.HTTP.Token
 		}
 
-		return &ghttp.BasicAuth{
+		return client.WithHTTPAuth(&ghttp.BasicAuth{
 			Username: user,
 			Password: password,
-		}, nil
+		}), nil
 	}
 
 	return nil, fmt.Errorf("%s", GitMethodError)
@@ -203,9 +204,9 @@ func IsGitRepoUpToDate(ptfCfg *PlatformConfig, bypass bool) (bool, error) {
 
 	// fetch from remote to ensure all objects got retrieved
 	opts := git.FetchOptions{
-		RemoteName: remoteCfg.Name,
-		RemoteURL:  remoteCfg.URLs[0],
-		Auth:       auth,
+		RemoteName:    remoteCfg.Name,
+		RemoteURL:     remoteCfg.URLs[0],
+		ClientOptions: []client.Option{auth},
 	}
 	err = repo.Fetch(&opts)
 	if err != nil && err != git.NoErrAlreadyUpToDate {
@@ -226,7 +227,7 @@ func IsGitRepoUpToDate(ptfCfg *PlatformConfig, bypass bool) (bool, error) {
 	}
 
 	// list all remote refs
-	refs, err := remote.List(&git.ListOptions{Auth: auth})
+	refs, err := remote.List(&git.ListOptions{ClientOptions: []client.Option{auth}})
 	if err != nil {
 		return false, KobraError(GitRemoteHeadError, err)
 	}
