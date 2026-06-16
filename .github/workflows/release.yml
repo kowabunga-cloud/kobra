@@ -41,7 +41,7 @@ jobs:
         id: app-token
         uses: actions/create-github-app-token@v3
         with:
-          app-id: ${{ vars.KOWABUNGA_BOT_APP_ID }}
+          client-id: ${{ vars.KOWABUNGA_BOT_APP_ID }}
           private-key: ${{ secrets.KOWABUNGA_BOT_PRIVATE_KEY }}
 
       - name: Release
