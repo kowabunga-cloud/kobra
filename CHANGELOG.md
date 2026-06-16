@@ -2,6 +2,13 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.1](https://github.com/kowabunga-cloud/kobra/compare/v0.5.0...v0.5.1) (2026-06-16)
+
+### Chores
+
+* add --environment flag to helmfile commands ([40b0682](https://github.com/kowabunga-cloud/kobra/commit/40b06829e6cd08ec6450e02e37267fabf5cedc1d))
+* update dependencies ([40b6ea8](https://github.com/kowabunga-cloud/kobra/commit/40b6ea8eb6a85d96be11a634338df6b23fe558c1))
+
 ## [0.5.0](https://github.com/kowabunga-cloud/kobra/compare/v0.4.2...v0.5.0) (2026-04-14)
 
 ### Bug Fixes
