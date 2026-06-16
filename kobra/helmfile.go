@@ -76,7 +76,7 @@ func helmfileInit(ptfCfg *PlatformConfig, hfDir string) error {
 	return helmfileExec(ptfCfg, cmdHfInit, hfDir, args, []string{})
 }
 
-func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData, hfDir string, verbose bool, release, outputDir string, freeArgs []string) error {
+func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData, hfDir string, verbose bool, environment, release, outputDir string, freeArgs []string) error {
 	// set environment variables
 	envs, sops, err := setSopsEnv(secrets)
 	if err != nil {
@@ -105,6 +105,10 @@ func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData
 		args = append(args, "--log-level")
 		args = append(args, "debug")
 	}
+	if environment != "" {
+		args = append(args, "--environment")
+		args = append(args, environment)
+	}
 	if release != "" {
 		args = append(args, "--selector")
 		args = append(args, fmt.Sprintf("name=%s", release))
@@ -132,7 +136,7 @@ func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData
 	return helmfileExec(ptfCfg, cmd, hfDir, args, envs)
 }
 
-func RunHelmfile(toolchainUpdate bool, cmd string, verbose, bypass bool, release, outputDir string, freeArgs []string) error {
+func RunHelmfile(toolchainUpdate bool, cmd string, verbose, bypass bool, environment, release, outputDir string, freeArgs []string) error {
 	// get Helmfile dir
 	hfDir, err := LookupHelmfileDir()
 	if err != nil {
@@ -175,7 +179,7 @@ func RunHelmfile(toolchainUpdate bool, cmd string, verbose, bypass bool, release
 	}
 
 	// now try to run Helmfile
-	err = helmfileRunCmd(cmd, ptfCfg, secrets, hfDir, verbose, release, outputDir, freeArgs)
+	err = helmfileRunCmd(cmd, ptfCfg, secrets, hfDir, verbose, environment, release, outputDir, freeArgs)
 	if err != nil {
 		return err
 	}
