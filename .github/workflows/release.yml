@@ -88,7 +88,7 @@ jobs:
           DIST=${{ matrix.version }} \
           RELEASE=${{ needs.release.outputs.new_release_version }} ./debian.sh
       - name: Upload Assets to GitHub Release
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: v${{ needs.release.outputs.new_release_version }}
           files: |
