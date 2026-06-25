@@ -76,6 +76,11 @@ func helmfileInit(ptfCfg *PlatformConfig, hfDir string) error {
 	return helmfileExec(ptfCfg, cmdHfInit, hfDir, args, []string{})
 }
 
+func helmfileCacheCleanup(ptfCfg *PlatformConfig, hfDir string) error {
+	klog.Infof("Cleaning up Helmfile local cache ...")
+	return helmfileExec(ptfCfg, "cache", hfDir, []string{"cleanup"}, []string{})
+}
+
 func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData, hfDir string, verbose bool, environment, release, outputDir string, freeArgs []string) error {
 	// set environment variables
 	envs, sops, err := setSopsEnv(secrets)
@@ -131,6 +136,12 @@ func helmfileRunCmd(cmd string, ptfCfg *PlatformConfig, secrets *KobraSecretData
 	}
 
 	args = append(args, freeArgs...)
+
+	// ensure we have a clean cache before running Helmfile
+	err = helmfileCacheCleanup(ptfCfg, hfDir)
+	if err != nil {
+		return err
+	}
 
 	klog.Infof("Applying Helm charts configuration ...")
 	return helmfileExec(ptfCfg, cmd, hfDir, args, envs)
