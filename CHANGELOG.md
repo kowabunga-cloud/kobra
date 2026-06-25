@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.2](https://github.com/kowabunga-cloud/kobra/compare/v0.5.1...v0.5.2) (2026-06-25)
+
+### Chores
+
+* ensure helmfile has a clean cache before processing ([51aa995](https://github.com/kowabunga-cloud/kobra/commit/51aa995c8d74008a773bb467c1a237f51e48d576))
+* update dependencies ([a2478c2](https://github.com/kowabunga-cloud/kobra/commit/a2478c20fc22ea7ba32a688e44af2bec1b64abc0))
+* use go to install golangci-lint instead of shell script ([6b1e8eb](https://github.com/kowabunga-cloud/kobra/commit/6b1e8eb943876bb03458e1f73d7c6f7bc09f5e20))
+
 ## [0.5.1](https://github.com/kowabunga-cloud/kobra/compare/v0.5.0...v0.5.1) (2026-06-16)
 
 ### Chores
