@@ -38,6 +38,7 @@ const (
 	tfOutputDesc      = "Output TF plan to the specified file"
 	tfAutoApproveDesc = "Automatically approves (WARNING: use it at your own risk)"
 	tfSkipDesc        = "Skip Git checks and and run nonetheless."
+	tfFolderDesc      = "Run TF from the specified sub-folder, relative to platform's root, instead of default 'terraform' one"
 )
 
 var tfSubCommands = map[string]string{
@@ -65,6 +66,7 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 	var tfModule string
 	var tfResource string
 	var tfOutput string
+	var tfFolder string
 	var tfAuto bool
 	var tfSkip bool
 
@@ -72,7 +74,7 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 		Use:   name,
 		Short: desc,
 		Run: func(cmd *cobra.Command, args []string) {
-			err := RunTF(toolchainUpdate, name, tfModule, tfResource, tfOutput, tfAuto, tfSkip, args)
+			err := RunTF(toolchainUpdate, name, tfModule, tfResource, tfOutput, tfFolder, tfAuto, tfSkip, args)
 			if err != nil {
 				klog.Fatalf(cmdFailureStatus, cmdTfError)
 			}
@@ -81,6 +83,7 @@ func NewTfSubCommand(name, desc string) *cobra.Command {
 
 	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
 	sub.Flags().BoolVarP(&tfSkip, "skip", "s", false, tfSkipDesc)
+	sub.Flags().StringVarP(&tfFolder, "folder", "f", "", tfFolderDesc)
 
 	if slices.Contains([]string{cmdTfApply, cmdTfDestroy, cmdTfPlan}, name) {
 		sub.Flags().StringVarP(&tfModule, "module", "m", "", tfModuleDesc)

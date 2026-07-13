@@ -90,9 +90,9 @@ func executeTF(ptfCfg *PlatformConfig, secrets *KobraSecretData, tfDir, cmd, mod
 	return BinExec(tfBin, tfDir, args, envs)
 }
 
-func RunTF(toolchainUpdate bool, cmd, module, resource, output string, auto, bypass bool, extraArgs []string) error {
+func RunTF(toolchainUpdate bool, cmd, module, resource, output, folder string, auto, bypass bool, extraArgs []string) error {
 	// get Terraform dir
-	tfDir, err := LookupTerraformDir()
+	tfDir, err := LookupTerraformDir(folder)
 	if err != nil {
 		return err
 	}

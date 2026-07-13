@@ -168,10 +168,15 @@ func LookupHelmfileDir() (string, error) {
 	return fmt.Sprintf("%s/%s", ptfDir, HelmfileDirName), nil
 }
 
-func LookupTerraformDir() (string, error) {
+func LookupTerraformDir(folder string) (string, error) {
 	ptfDir, err := LookupPlatformDir()
 	if err != nil {
 		return "", err
+	}
+
+	// explicit sub-folder requested, e.g. 'terraform/service-b'
+	if folder != "" {
+		return filepath.Join(ptfDir, folder), nil
 	}
 
 	// where are we again ?
