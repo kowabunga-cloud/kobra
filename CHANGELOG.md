@@ -2,6 +2,14 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.5.3](https://github.com/kowabunga-cloud/kobra/compare/v0.5.2...v0.5.3) (2026-07-13)
+
+### Chores
+
+* implement issue [#11](https://github.com/kowabunga-cloud/kobra/issues/11) (conditional passing of tf folder as cmdline argument) ([8b33ee0](https://github.com/kowabunga-cloud/kobra/commit/8b33ee05b17d9f9ce689bd172fec97f85d36f9a5))
+* update dependencies ([46c9562](https://github.com/kowabunga-cloud/kobra/commit/46c9562798cdb2d32058080d22f932468a2519bd))
+* upgrade action-gh-release version ([1ddeaea](https://github.com/kowabunga-cloud/kobra/commit/1ddeaea6c05cf372b641d8df426f107eee3d21c1))
+
 ## [0.5.2](https://github.com/kowabunga-cloud/kobra/compare/v0.5.1...v0.5.2) (2026-06-25)
 
 ### Chores
