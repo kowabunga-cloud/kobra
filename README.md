@@ -235,9 +235,9 @@ IPSctl development relies on [Semantic Versioning](https://semver.org/) and unsc
 Changelog is automatically triggered from commits summary from the following commits types: **feat**, **fix**, **perf**, **chore**, **docs**, e.g.
 
 ```
-feat!: upgrade API version         <- will increase version major number at release
-feat: add new super nice feature   <- will increase version minor number at release
-fix: correct bug XYZ               <- will increase version patch number at release
+feat(CDO-XYZ)!: upgrade API version         <- will increase version major number at release
+feat(CDO-XYZ): add new super nice feature   <- will increase version minor number at release
+fix(CDO-XYZ): correct bug XYZ               <- will increase version patch number at release
 ```
 
 ## Versioning
