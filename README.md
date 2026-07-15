@@ -258,4 +258,6 @@ IPSctl is maintained by [Kowabunga maintainers](https://github.com/orgs/kowabung
 
 ## License
 
-Licensed under [Apache License, Version 2.0](https://opensource.org/license/apache-2-0), see [`LICENSE`](LICENSE).
+Cinemo Proprietary. See [LICENSE](https://github.com/Cinemo-Product-Engineering/ipsctl/tree/master/LICENSE) for full details.
+
+Original license under [Apache License, Version 2.0](https://opensource.org/license/apache-2-0), all rights granted by Benjamin Zores.
