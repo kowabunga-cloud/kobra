@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="ipsctl.png" alt="IPSctl" width="200">
+  <img src="ipsctl.png" alt="IPSctl" width="1000">
 </p>
 
 # IPSctl
