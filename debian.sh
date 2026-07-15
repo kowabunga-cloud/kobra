@@ -7,7 +7,7 @@ export PREVIOUS_VERSION=$(git tag --sort=-committerdate | head -2 | awk '{split(
 export CHANGES=$(git log --pretty="- %s" $CURRENT_VERSION...$PREVIOUS_VERSION)
 
 cat > debian/changelog <<EOF
-kobra (${RELEASE}~$DIST) ${DIST}; urgency=medium
+ipsctl (${RELEASE}~$DIST) ${DIST}; urgency=medium
 
 ${CHANGES}
 

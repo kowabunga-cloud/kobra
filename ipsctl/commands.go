@@ -1,0 +1,33 @@
+/*
+ * Copyright (c) The Kowabunga Project
+ * Apache License, Version 2.0 (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0.txt)
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package ipsctl
+
+import (
+	"os"
+
+	"github.com/kowabunga-cloud/common/klog"
+
+	"github.com/spf13/cobra"
+)
+
+const (
+	cmdToolchainUpdateDesc = "Check for toolchain update before run"
+
+	cmdFailureStatus = "Something went terribly wrong, unable to run %s or execution came as error !"
+)
+
+var RootCmd = &cobra.Command{
+	Use:   "ipsctl",
+	Short: "IPSctl - DevOps deployment swiss-army knife utility",
+}
+
+func ParseCommands() {
+	if err := RootCmd.Execute(); err != nil {
+		klog.Errorf("Whoops. There was an error while executing your CLI '%s'", err)
+		os.Exit(1)
+	}
+}

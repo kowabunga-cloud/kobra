@@ -1,8 +1,7 @@
 # Copyright (c) The Kowabunga Project
 # Apache License, Version 2.0 (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0.txt)
-# SPDX-License-Identifier: Apache-2.0
 
-PKG_NAME=github.com/kowabunga-cloud/kobra/kobra
+PKG_NAME=github.com/Cinemo-Product-Engineering/ipsctl/ipsctl
 VERSION=$(shell git describe --tags --always --dirty)
 
 # Make sure GOPATH is NOT set to this folder or we'll get an error "$GOPATH/go.mod exists but should not"
@@ -46,7 +45,7 @@ update: ; $(info $(M) updating modules…) @
 build: ; $(info $(M) building executables…) @ ## Build binaries
 	$Q mkdir -p $(BINDIR)
 	$Q go build \
-		-gcflags="kobra/...=-e" \
+		-gcflags="ipsctl/...=-e" \
 		-ldflags='$(DEBUG) -X $(PKG_NAME).version=$(VERSION)' \
 		-o $(BINDIR) ./...
 

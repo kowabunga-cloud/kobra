@@ -1,4 +1,4 @@
-module github.com/kowabunga-cloud/kobra
+module github.com/Cinemo-Product-Engineering/ipsctl
 
 go 1.26.4
 

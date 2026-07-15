@@ -1,15 +1,15 @@
 ---
 version: 2
-project_name: kobra
+project_name: ipsctl
 
 builds:
-- main: ./cmd/kobra/main.go
-  binary: kobra
+- main: ./cmd/ipsctl/main.go
+  binary: ipsctl
   flags:
     - -trimpath
     - -v
   gcflags:
-    - kobra/...=-e
+    - ipsctl/...=-e
   ldflags:
     - -w -s -X {{.Env.PKG_NAME}}.version={{.Env.VERSION}}
   goos:

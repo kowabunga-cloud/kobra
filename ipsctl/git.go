@@ -1,0 +1,280 @@
+/*
+ * Copyright (c) The Kowabunga Project
+ * Apache License, Version 2.0 (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0.txt)
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package ipsctl
+
+import (
+	"fmt"
+	"strings"
+
+	"golang.org/x/crypto/ssh"
+
+	"github.com/go-git/go-git/v6"
+	"github.com/go-git/go-git/v6/config"
+	"github.com/go-git/go-git/v6/plumbing"
+	"github.com/go-git/go-git/v6/plumbing/client"
+	"github.com/go-git/go-git/v6/plumbing/object"
+	"github.com/go-git/go-git/v6/plumbing/revlist"
+	"github.com/go-git/go-git/v6/plumbing/transport"
+	ghttp "github.com/go-git/go-git/v6/plumbing/transport/http"
+	gssh "github.com/go-git/go-git/v6/plumbing/transport/ssh"
+	"github.com/go-git/go-git/v6/plumbing/transport/ssh/sshagent"
+	"github.com/kevinburke/ssh_config"
+	"github.com/kowabunga-cloud/common/klog"
+)
+
+const (
+	GitOrigin = "origin"
+
+	GitDivergenceError = "Divergence between local and remote Git branches. Stopping here ..."
+	GitReadError       = "Unable to read Git repository: %s"
+	GitFetchError      = "Unable to fetch remote Git repository: %s"
+	GitHeadError       = "Unable to read Git local head config: %s"
+	GitRemoteError     = "Unable to read from Git remote: %s"
+	GitRemoteHeadError = "Unable to read Git remote head config: %s"
+	GitRemoteRefError  = "Unable to find the requested remote reference"
+	GitRevHistoryError = "Unable to get revisions history changes between local and remote branches"
+	GitMethodError     = "Unsupported Git access method"
+)
+
+func revListCount(r *git.Repository, from, to *plumbing.Reference) (int, error) {
+
+	commits := make([]*object.Commit, 0)
+
+	fromHistory, err := revlist.Objects(r.Storer, []plumbing.Hash{from.Hash()}, nil)
+	if err != nil {
+		return 0, err
+	}
+
+	toHistory, err := revlist.Objects(r.Storer, []plumbing.Hash{to.Hash()}, fromHistory)
+	if err != nil {
+		return 0, err
+	}
+
+	for _, h := range toHistory {
+		c, err := r.CommitObject(h)
+		if err != nil {
+			continue
+		}
+		commits = append(commits, c)
+	}
+
+	return len(commits), nil
+}
+
+func gitAuth(ptfCfg *PlatformConfig, url string) (client.Option, error) {
+	ep, err := transport.ParseURL(url)
+	if err != nil {
+		return nil, err
+	}
+
+	// protocol definition
+	protocol := ep.Scheme
+	if ptfCfg.Git.Method != GitMethodUnknown { // override if defined
+		protocol = ptfCfg.Git.Method
+	}
+	klog.Debugf("Using Git protocol '%s'", protocol)
+
+	// host definition
+	host := ep.Host
+	klog.Debugf("Using Git host '%s'", host)
+
+	// user definition
+	user := ep.User.Username()
+	if protocol == GitMethodSSH { // override if defined
+		if user == "" {
+			user = GitDefaultUserSSH
+		}
+		if ptfCfg.Git.SSH.User != "" { // override if defined
+			user = ptfCfg.Git.SSH.User
+		}
+	}
+	if protocol == GitMethodHTTP && ptfCfg.Git.HTTP.Username != "" { // override if defined
+		user = ptfCfg.Git.HTTP.Username
+	}
+	klog.Debugf("Using Git user '%s'", user)
+
+	// password definition
+	password, _ := ep.User.Password()
+	if protocol == GitMethodSSH && ptfCfg.Git.SSH.Password == "" { // override if defined
+		password = ptfCfg.Git.SSH.Password
+	}
+	if protocol == GitMethodHTTP && ptfCfg.Git.HTTP.Password != "" { // override if defined
+		password = ptfCfg.Git.HTTP.Password
+	}
+	if password != "" {
+		klog.Debugf("Using Git password '***REDACTED***'")
+	}
+
+	switch protocol {
+	case GitMethodSSH:
+		// if SSH agent is available, use it for authentication
+		if sshagent.Available() {
+			klog.Debugf("Using SSH agent for Git authentication")
+			auth, err := gssh.NewSSHAgentAuth(user)
+			if err != nil {
+				return nil, err
+			}
+
+			auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
+			return client.WithSSHAuth(auth), nil
+		}
+
+		// fallback to private key authentication
+		klog.Debugf("SSH agent not available, falling back to private key authentication for Git")
+		if ptfCfg.Git.SSH.PrivateKey == "" {
+			ptfCfg.Git.SSH.PrivateKey = ssh_config.Get(host, "IdentityFile")
+		}
+
+		if ptfCfg.Git.SSH.PrivateKey != "" && strings.HasPrefix(ptfCfg.Git.SSH.PrivateKey, "~/") {
+			expanded, err := expandTilde(ptfCfg.Git.SSH.PrivateKey)
+			if err != nil {
+				return nil, err
+			}
+			ptfCfg.Git.SSH.PrivateKey = expanded
+		}
+
+		klog.Debugf("Using Git private key from %s", ptfCfg.Git.SSH.PrivateKey)
+
+		auth, err := gssh.NewPublicKeysFromFile(user, ptfCfg.Git.SSH.PrivateKey, password)
+		if err != nil {
+			return nil, err
+		}
+		auth.HostKeyCallback = ssh.InsecureIgnoreHostKey() // #nosec G106
+		return client.WithSSHAuth(auth), nil
+	case GitMethodHTTP:
+		if ptfCfg.Git.HTTP.Token != "" {
+			// The intended use of a GitHub personal access token is in replace of your password
+			// because access tokens can easily be revoked.
+			// https://help.github.com/articles/creating-a-personal-access-token-for-the-command-line/
+			user = "abc123" // yes, this can be anything except an empty string
+			password = ptfCfg.Git.HTTP.Token
+		}
+
+		return client.WithHTTPAuth(&ghttp.BasicAuth{
+			Username: user,
+			Password: password,
+		}), nil
+	}
+
+	return nil, fmt.Errorf("%s", GitMethodError)
+}
+
+func IsGitRepoUpToDate(ptfCfg *PlatformConfig, bypass bool) (bool, error) {
+
+	if bypass {
+		return true, nil
+	}
+
+	klog.Infof("Verifying if Git repository is up to date ...")
+
+	ptfDir, err := LookupPlatformDir()
+	if err != nil {
+		return false, IPSctlError("%s", err.Error())
+	}
+
+	repo, err := git.PlainOpen(ptfDir)
+	if err != nil {
+		return false, IPSctlError(GitReadError, err)
+	}
+	defer func() {
+		_ = repo.Close()
+	}()
+
+	// retrieves configuration
+	cfg, err := repo.Config()
+	if err != nil {
+		return false, err
+	}
+
+	var remoteCfg *config.RemoteConfig
+	for _, r := range cfg.Remotes {
+		remoteCfg = r
+		break
+	}
+
+	// implement proper Git access authentication
+	auth, err := gitAuth(ptfCfg, remoteCfg.URLs[0])
+	if err != nil {
+		return false, err
+	}
+
+	// fetch from remote to ensure all objects got retrieved
+	opts := git.FetchOptions{
+		RemoteName:    remoteCfg.Name,
+		RemoteURL:     remoteCfg.URLs[0],
+		ClientOptions: []client.Option{auth},
+	}
+	err = repo.Fetch(&opts)
+	if err != nil && err != git.NoErrAlreadyUpToDate {
+		return false, IPSctlError(GitFetchError, err)
+	}
+
+	// now get the local branch reference
+	refLocal, err := repo.Head()
+	if err != nil {
+		return false, IPSctlError(GitHeadError, err)
+	}
+	klog.Debugf("Local Head: %s - %s", refLocal.Hash().String(), refLocal.Name())
+
+	// find remote
+	remote, err := repo.Remote(GitOrigin)
+	if err != nil {
+		return false, IPSctlError(GitRemoteError, err)
+	}
+
+	// list all remote refs
+	refs, err := remote.List(&git.ListOptions{ClientOptions: []client.Option{auth}})
+	if err != nil {
+		return false, IPSctlError(GitRemoteHeadError, err)
+	}
+
+	// look for remote reference on the same branch
+	var refRemote *plumbing.Reference
+	for _, ref := range refs {
+		if ref.Name() == refLocal.Name() {
+			refRemote = ref
+			klog.Debugf("Remote Head: %s - %s", refRemote.Hash().String(), refRemote.Name())
+			break
+		}
+	}
+
+	if refRemote == nil {
+		// there's no remote branch yet, so go ahead
+		return true, IPSctlError(GitRemoteRefError)
+	}
+
+	behindCount, err := revListCount(repo, refLocal, refRemote)
+	if err != nil {
+		return false, IPSctlError(GitRevHistoryError)
+	}
+	klog.Debugf("behindCount: %d", behindCount)
+
+	aheadCount, err := revListCount(repo, refRemote, refLocal)
+	if err != nil {
+		return false, IPSctlError(GitRevHistoryError)
+	}
+	klog.Debugf("aheadCount: %d", aheadCount)
+
+	if behindCount == 0 && aheadCount == 0 {
+		klog.Infof("Local branch is up-to-date, we're good to go !")
+		return true, nil
+	}
+
+	if behindCount == 0 && aheadCount > 0 {
+		klog.Infof("Local branch is ahead, we're good to go !")
+		return true, nil
+	}
+
+	if behindCount > 0 && aheadCount == 0 {
+		klog.Infof("Remote branch is ahead, you should pull and merge before going further.")
+		return false, nil
+	}
+
+	// failover: behindCount > 0 && aheadCount > 0
+	klog.Infof("Local and Remote branches have diverged, you really should pull and merge before going further.")
+	return false, nil
+}

@@ -1,0 +1,106 @@
+/*
+ * Copyright (c) The Kowabunga Project
+ * Apache License, Version 2.0 (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0.txt)
+ * SPDX-License-Identifier: Apache-2.0
+ */
+
+package ipsctl
+
+import (
+	"fmt"
+
+	"github.com/kowabunga-cloud/common/klog"
+	"github.com/spf13/cobra"
+)
+
+const (
+	cmdHf             = "helmfile [cmd] where"
+	cmdHfDesc         = "Run Helmfile commands"
+	cmdHfFreeArgsDesc = "Tips: Use -- [ARGS] to extend it with free args"
+	cmdHfError        = "Helmfile"
+
+	// Helmfile sub-commands
+	cmdHfApply    = "apply"
+	cmdHfBuild    = "build"
+	cmdHfDeps     = "deps"
+	cmdHfDestroy  = "destroy"
+	cmdHfDiff     = "diff"
+	cmdHfFetch    = "fetch"
+	cmdHfInit     = "init"
+	cmdHfList     = "list"
+	cmdHfPrintEnv = "print-env"
+	cmdHfRepos    = "repos"
+	cmdHfStatus   = "status"
+	cmdHfSync     = "sync"
+	cmdHfTemplate = "template"
+	cmdHfWriteVal = "write-values"
+
+	hfVerboseDesc   = "Enabled extra verbosity/debug"
+	hfSkipDesc      = "Skip Git checks and and run nonetheless."
+	hfEnvDesc       = "Specify the environment name."
+	hfReleaseDesc   = "Name of the specific Helm release to be used"
+	hfOutputDirDesc = "Path to templates output directory"
+)
+
+var hfSubCommands = map[string]string{
+	cmdHfApply:    "Apply all resources from state file only when there are changes",
+	cmdHfBuild:    "Build all resources from state file",
+	cmdHfDeps:     "Update charts based on their requirements",
+	cmdHfDestroy:  "Destroys and then purges releases",
+	cmdHfDiff:     "Diff releases defined in state file",
+	cmdHfFetch:    "Fetch charts from state file",
+	cmdHfInit:     "Initialize the helmfile, includes version checking and installation of helm and plug-ins",
+	cmdHfList:     "List releases defined in state file",
+	cmdHfPrintEnv: "Print parsed environment configuration",
+	cmdHfRepos:    "Add chart repositories defined in state file",
+	cmdHfStatus:   "Retrieve status of releases in state file",
+	cmdHfSync:     "Sync releases defined in state file",
+	cmdHfTemplate: "Template releases defined in state file",
+	cmdHfWriteVal: "Write values files for releases. Similar to `helmfile template`, write values files instead of manifests",
+}
+
+var hfCmd = &cobra.Command{
+	Use:     cmdHf,
+	Short:   cmdHfDesc,
+	Aliases: []string{"hf"},
+	Long:    fmt.Sprintf("%s\n  %s", cmdHfDesc, cmdHfFreeArgsDesc),
+}
+
+func NewHfSubCommand(name, desc string) *cobra.Command {
+	var toolchainUpdate bool
+	var hfVerbose bool
+	var hfSkip bool
+	var hfEnv string
+	var hfRelease string
+	var hfOutputDir string
+
+	sub := &cobra.Command{
+		Use:   name,
+		Short: desc,
+		Run: func(cmd *cobra.Command, args []string) {
+			err := RunHelmfile(toolchainUpdate, name, hfVerbose, hfSkip, hfEnv, hfRelease, hfOutputDir, args)
+			if err != nil {
+				klog.Fatalf(cmdFailureStatus, fmt.Sprintf("%s %s", cmdHfError, name))
+			}
+		},
+	}
+
+	sub.Flags().BoolVarP(&toolchainUpdate, "update-toolchain", "", false, cmdToolchainUpdateDesc)
+	sub.Flags().BoolVarP(&hfVerbose, "verbose", "v", false, hfVerboseDesc)
+	sub.Flags().BoolVarP(&hfSkip, "skip", "s", false, hfSkipDesc)
+	sub.Flags().StringVarP(&hfEnv, "environment", "e", "", hfEnvDesc)
+	sub.Flags().StringVarP(&hfRelease, "release", "r", "", hfReleaseDesc)
+
+	if name == cmdHfTemplate || name == cmdHfWriteVal {
+		sub.Flags().StringVarP(&hfOutputDir, "output-dir", "o", "", hfOutputDirDesc)
+	}
+
+	return sub
+}
+
+func init() {
+	for sub, desc := range hfSubCommands {
+		hfCmd.AddCommand(NewHfSubCommand(sub, desc))
+	}
+	RootCmd.AddCommand(hfCmd)
+}

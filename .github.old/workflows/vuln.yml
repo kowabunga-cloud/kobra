@@ -4,8 +4,8 @@ on:
   push:
     branches: master
     paths:
-      - 'cmd/kobra/**'
-      - 'kobra/**'
+      - 'cmd/ipsctl/**'
+      - 'ipsctl/**'
   pull_request:
     branches: master
   workflow_dispatch:

@@ -124,10 +124,10 @@ jobs:
         uses: actions/setup-go@v6
         with:
           go-version: ${{ env.GO_VERSION }}
-      - name: Get Kobra package name
-        run: echo "KOBRA_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
-      - name: Get Kobra version
-        run: echo "KOBRA_VERSION=${{ needs.release.outputs.new_release_version }}" >> $GITHUB_ENV
+      - name: Get IPSctl package name
+        run: echo "IPSCTL_PKG_NAME=$(grep '^PKG_NAME' Makefile | cut -d '=' -f 2)" >> $GITHUB_ENV
+      - name: Get IPSctl version
+        run: echo "IPSCTL_VERSION=${{ needs.release.outputs.new_release_version }}" >> $GITHUB_ENV
       - name: Run GoReleaser
         uses: goreleaser/goreleaser-action@v7
         with:
@@ -135,47 +135,47 @@ jobs:
           args: release --clean
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          PKG_NAME: ${{ env.KOBRA_PKG_NAME }}
-          VERSION: v${{ env.KOBRA_VERSION }}
+          PKG_NAME: ${{ env.IPSCTL_PKG_NAME }}
+          VERSION: v${{ env.IPSCTL_VERSION }}
       - name: Retrieve build residues SHA256 checksums
         run: |
           sudo apt-get -y install curl
-          curl -L https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_SHA256SUMS -o cksum.txt
+          curl -L https://github.com/kowabunga-cloud/ipsctl/releases/download/v${{ env.IPSCTL_VERSION }}/ipsctl_${{ env.IPSCTL_VERSION }}_SHA256SUMS -o cksum.txt
           echo "DARWIN_ARM64_SHA256=$(cat cksum.txt | grep darwin_arm64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "DARWIN_AMD64_SHA256=$(cat cksum.txt | grep darwin_amd64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "LINUX_ARM64_SHA256=$(cat cksum.txt | grep linux_arm64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
           echo "LINUX_AMD64_SHA256=$(cat cksum.txt | grep linux_amd64 | head -1 | cut -d ' ' -f 1)" >> $GITHUB_ENV
       - name: Build Homebrew Formulae
         run: |
-          FORMULAE="class Kobra < Formula
+          FORMULAE="class IPSctl < Formula
             desc \"DevOps deployment swiss-army knife utility\"
-            homepage \"https://github.com/kowabunga-cloud/kobra/\"
-            version \"${{ env.KOBRA_VERSION }}\"
+            homepage \"https://github.com/kowabunga-cloud/ipsctl/\"
+            version \"${{ env.IPSCTL_VERSION }}\"
 
             if OS.mac?
               if Hardware::CPU.intel?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_amd64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/ipsctl/releases/download/v${{ env.IPSCTL_VERSION }}/ipsctl_${{ env.IPSCTL_VERSION }}_darwin_amd64.tar.gz\"
                 sha256 \"${{ env.DARWIN_AMD64_SHA256 }}\"
               elsif Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_darwin_arm64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/ipsctl/releases/download/v${{ env.IPSCTL_VERSION }}/ipsctl_${{ env.IPSCTL_VERSION }}_darwin_arm64.tar.gz\"
                 sha256 \"${{ env.DARWIN_ARM64_SHA256 }}\"
               end
             elsif OS.linux?
               if Hardware::CPU.intel?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_amd64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/ipsctl/releases/download/v${{ env.IPSCTL_VERSION }}/ipsctl_${{ env.IPSCTL_VERSION }}_linux_amd64.tar.gz\"
                 sha256 \"${{ env.LINUX_AMD64_SHA256 }}\"
               elsif Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
-                url \"https://github.com/kowabunga-cloud/kobra/releases/download/v${{ env.KOBRA_VERSION }}/kobra_${{ env.KOBRA_VERSION }}_linux_arm64.tar.gz\"
+                url \"https://github.com/kowabunga-cloud/ipsctl/releases/download/v${{ env.IPSCTL_VERSION }}/ipsctl_${{ env.IPSCTL_VERSION }}_linux_arm64.tar.gz\"
                 sha256 \"${{ env.LINUX_ARM64_SHA256 }}\"
               end
             end
 
             def install
-              bin.install \"kobra\"
+              bin.install \"ipsctl\"
             end
           end
           "
-          echo "$FORMULAE" > kobra.rb
+          echo "$FORMULAE" > ipsctl.rb
       - name: Push Formula to Homebrew tap
         run: |
           git clone https://github.com/kowabunga-cloud/homebrew-tap.git
@@ -184,7 +184,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
 
-          mv ../kobra.rb .
-          git add ./kobra.rb
-          git commit -m "Update formula for ${{ env.KOBRA_VERSION }}"
+          mv ../ipsctl.rb .
+          git add ./ipsctl.rb
+          git commit -m "Update formula for ${{ env.IPSCTL_VERSION }}"
           git push https://x-access-token:${{ secrets.PAT_HOMEBREW_TAP_RELEASER }}@github.com/kowabunga-cloud/homebrew-tap.git HEAD:master

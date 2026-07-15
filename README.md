@@ -2,31 +2,31 @@
   <picture>
     <source srcset="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" media="(prefers-color-scheme: dark)" />
     <source srcset="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" />
-    <img src="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" alt="Kobra" width="200">
+    <img src="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" alt="IPSctl" width="200">
   </picture>
 </p>
 
-# Kobra
+# IPSctl
 
-This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a convenient wrapper over [OpenTofu](https://opentofu.org/), [Ansible](https://www.redhat.com/en/technologies/management/ansible) and [Helmfile](https://helmfile.readthedocs.io/en/latest/) with proper secrets management, removing the hassle of complex deployment strategy.
+This is **IPSctl**, a DevOps deployment swiss-army knife utility. It provides a convenient wrapper over [OpenTofu](https://opentofu.org/), [Ansible](https://www.redhat.com/en/technologies/management/ansible) and [Helmfile](https://helmfile.readthedocs.io/en/latest/) with proper secrets management, removing the hassle of complex deployment strategy.
 
 [![License: Apache License, Version 2.0](https://img.shields.io/badge/License-Apache_2.0-blue.svg)](https://spdx.org/licenses/Apache-2.0.html)
-[![Build Status](https://github.com/kowabunga-cloud/kobra/actions/workflows/ci.yml/badge.svg)](https://github.com/kowabunga-cloud/kobra/actions/workflows/ci.yml)
-[![GoSec Status](https://github.com/kowabunga-cloud/kobra/actions/workflows/sec.yml/badge.svg)](https://github.com/kowabunga-cloud/kobra/actions/workflows/sec.yml)
-[![GovulnCheck Status](https://github.com/kowabunga-cloud/kobra/actions/workflows/vuln.yml/badge.svg)](https://github.com/kowabunga-cloud/kobra/actions/workflows/vuln.yml)
-[![Coverage Status](https://codecov.io/gh/kowabunga-cloud/kobra/branch/master/graph/badge.svg)](https://codecov.io/gh/kowabunga-cloud/kobra)
-[![GoReport](https://goreportcard.com/badge/github.com/kowabunga-cloud/kobra)](https://goreportcard.com/report/github.com/kowabunga-cloud/kobra)
-[![GoCode](https://img.shields.io/badge/go.dev-pkg-007d9c.svg?style=flat)](https://pkg.go.dev/github.com/kowabunga-cloud/kobra)
-[![time tracker](https://wakatime.com/badge/github/kowabunga-cloud/kobra.svg)](https://wakatime.com/badge/github/kowabunga-cloud/kobra)
-![Code lines](https://sloc.xyz/github/kowabunga-cloud/kobra/?category=code)
-![Comments](https://sloc.xyz/github/kowabunga-cloud/kobra/?category=comments)
-![COCOMO](https://sloc.xyz/github/kowabunga-cloud/kobra/?category=cocomo&avg-wage=100000)
+[![Build Status](https://github.com/Cinemo-Product-Engineering/ipsctl/actions/workflows/ci.yml/badge.svg)](https://github.com/Cinemo-Product-Engineering/ipsctl/actions/workflows/ci.yml)
+[![GoSec Status](https://github.com/Cinemo-Product-Engineering/ipsctl/actions/workflows/sec.yml/badge.svg)](https://github.com/Cinemo-Product-Engineering/ipsctl/actions/workflows/sec.yml)
+[![GovulnCheck Status](https://github.com/Cinemo-Product-Engineering/ipsctl/actions/workflows/vuln.yml/badge.svg)](https://github.com/Cinemo-Product-Engineering/ipsctl/actions/workflows/vuln.yml)
+[![Coverage Status](https://codecov.io/gh/Cinemo-Product-Engineering/ipsctl/branch/master/graph/badge.svg)](https://codecov.io/gh/Cinemo-Product-Engineering/ipsctl)
+[![GoReport](https://goreportcard.com/badge/github.com/Cinemo-Product-Engineering/ipsctl)](https://goreportcard.com/report/github.com/Cinemo-Product-Engineering/ipsctl)
+[![GoCode](https://img.shields.io/badge/go.dev-pkg-007d9c.svg?style=flat)](https://pkg.go.dev/github.com/Cinemo-Product-Engineering/ipsctl)
+[![time tracker](https://wakatime.com/badge/github/Cinemo-Product-Engineering/ipsctl.svg)](https://wakatime.com/badge/github/Cinemo-Product-Engineering/ipsctl)
+![Code lines](https://sloc.xyz/github/Cinemo-Product-Engineering/ipsctl/?category=code)
+![Comments](https://sloc.xyz/github/Cinemo-Product-Engineering/ipsctl/?category=comments)
+![COCOMO](https://sloc.xyz/github/Cinemo-Product-Engineering/ipsctl/?category=cocomo&avg-wage=100000)
 
 ## Current Releases
 
 | Project            | Release Badge                                                                                       |
 |--------------------|-----------------------------------------------------------------------------------------------------|
-| **Kobra**           | [![Kowabunga Release](https://img.shields.io/github/v/release/kowabunga-cloud/kobra)](https://github.com/kowabunga-cloud/kobra/releases) |
+| **IPSctl**           | [![Kowabunga Release](https://img.shields.io/github/v/release/Cinemo-Product-Engineering/ipsctl)](https://github.com/Cinemo-Product-Engineering/ipsctl/releases) |
 
 # Installation
 
@@ -35,28 +35,28 @@ This is **Kobra**, a DevOps deployment swiss-army knife utility. It provides a c
 Register [Kowabunga APT repository](https://packages.kowabunga.cloud/) and then simply:
 
 ```sh
-$ sudo apt-get install kobra
+$ sudo apt-get install ipsctl
 ```
 
 ## macOS
 
-macOS can install **Kobra** through [Homebrew](https://brew.sh/). Simply do:
+macOS can install **IPSctl** through [Homebrew](https://brew.sh/). Simply do:
 
 ```sh
 $ brew tap kowabunga/cloud https://github.com/kowabunga-cloud/homebrew-tap.git
 $ brew update
-$ brew install kobra
+$ brew install ipsctl
 ```
 
 ## Manual
 
-**Kobra** can be manually installed through [released binaries](https://github.com/kowabunga-cloud/kobra/releases).
+**IPSctl** can be manually installed through [released binaries](https://github.com/Cinemo-Product-Engineering/ipsctl/releases).
 
 Just download and extract the tarball for your target.
 
 ## Managed Platform Configuration
 
-Kobra-managed platforms require a specific **kobra.yml** file to exist at the root of your platform. This YAML-formated file contains several important pieces of configuration, e.g:
+IPSctl-managed platforms require a specific **ipsctl.yml** file to exist at the root of your platform. This YAML-formated file contains several important pieces of configuration, e.g:
 
 ```yaml
 git:                                  # optional
@@ -76,7 +76,7 @@ secrets:
     role_arn: string
     id: string
   env:                                # optional, env-provider specific
-    var: string                       # optional, defaults to KOBRA_MASTER_KEY
+    var: string                       # optional, defaults to IPSCTL_MASTER_KEY
   file:                               # optional, file-provider specific
     path: string
   hcp:                                # optional, hcp-provider specific
@@ -124,23 +124,23 @@ toolchain:                            # optional
                                       # and value being package version (use 'latest' if unpinned).
 ```
 
-Note that **kobra.yml** configuration is global at plaform-level, and source of truth for all of your contributors. Consequently, it's not supposed to define user (or contributor) specific parameters (such as path to local files ...).
+Note that **ipsctl.yml** configuration is global at plaform-level, and source of truth for all of your contributors. Consequently, it's not supposed to define user (or contributor) specific parameters (such as path to local files ...).
 
-It is however possible to locally override its global content with a user specific one. One can consequently override it with a custom **.kobra.yml** configuration file, located at the root of platform's repository. If such a file exists, its content will be merged will global one.
+It is however possible to locally override its global content with a user specific one. One can consequently override it with a custom **.ipsctl.yml** configuration file, located at the root of platform's repository. If such a file exists, its content will be merged will global one.
 
-**NOTE**: If using local override, do not forget to decalre **.kobra.yml** in your project's **.gitignore** as no one wants local overrides to be part of your Git history.
+**NOTE**: If using local override, do not forget to decalre **.ipsctl.yml** in your project's **.gitignore** as no one wants local overrides to be part of your Git history.
 
 ## Git Authentication
 
-Note that Kobra will try to connect to Git before doing any deployment action. This is an intended extra security measure to ensure no divergence between your local copy and the remote one. More specifically, it is understood (and allowed) that your local branch can be ahead of origin repository's one, but not the opposite. This is meant to ensure you're not going to deploy a possibly outdated configuration of your platform.
+Note that IPSctl will try to connect to Git before doing any deployment action. This is an intended extra security measure to ensure no divergence between your local copy and the remote one. More specifically, it is understood (and allowed) that your local branch can be ahead of origin repository's one, but not the opposite. This is meant to ensure you're not going to deploy a possibly outdated configuration of your platform.
 
-Kobra will try auto-detecting Git repository's access as much as can be, but it can be further tuned in **git.{*}** configuration options in **kobra.yml** file.
+IPSctl will try auto-detecting Git repository's access as much as can be, but it can be further tuned in **git.{*}** configuration options in **ipsctl.yml** file.
 
 Note that it is always possible to bypass this behavior by specifiying the **--skip** (or **-s**) command-line flag.
 
 ## SSH Connectivity
 
-While global SSH connection (either to Git or managed instances, through Ansible) can be set in **kobra.yml** file, it is highly recommended to keep it properly managed at OS level.
+While global SSH connection (either to Git or managed instances, through Ansible) can be set in **ipsctl.yml** file, it is highly recommended to keep it properly managed at OS level.
 
 By default, Git connectivity will rely on [SSH Agent](https://linux.die.net/man/1/ssh-agent), if available.
 
@@ -165,7 +165,7 @@ host-2 ansible_host=192.168.0.2 ansible_ssh_user=ubuntu ansible_ssh_private_key_
 
 ## Secrets Management
 
-Kobra supports different secrets management **providers**:
+IPSctl supports different secrets management **providers**:
 
 - **aws**: AWS Secrets Manager (*TODO*)
 - **env**: Environment variable stored master-key
@@ -176,7 +176,7 @@ Kobra supports different secrets management **providers**:
 
 **WARNING**: it is highly recommended not to use local secret management backends if secret is to be used by other contributors. When working as a team, always rely on distributed secret management backends.
 
-On supported providers (currently only **hcp**), Kobra has optional support for 2-ways sync maps. This allows keep local SOPS-encrypted secrets in sync with remote secrets-provider hosted ones. This comes in handy when you're having a proper GitOps approach with [External Secrets Manager](https://external-secrets.io/latest/) for example and yet want to keep the convenience of using **kobra secrets edit** command to simply edit our secrets.
+On supported providers (currently only **hcp**), IPSctl has optional support for 2-ways sync maps. This allows keep local SOPS-encrypted secrets in sync with remote secrets-provider hosted ones. This comes in handy when you're having a proper GitOps approach with [External Secrets Manager](https://external-secrets.io/latest/) for example and yet want to keep the convenience of using **ipsctl secrets edit** command to simply edit our secrets.
 
 Note that synchronization is both-ways and takes both content and last modified timestamp to determine precedence. If local SOPS file is more up-to-date, remote one will be updated. If remote one has been modified, changes will be fetched into local one prior to any edition.
 
@@ -184,7 +184,7 @@ Note that synchronization is both-ways and takes both content and last modified 
 
 ### Hashicorp Vault
 
-Kobra will try to authenticate to HCP Vault through the following mechanisms, in respective order:
+IPSctl will try to authenticate to HCP Vault through the following mechanisms, in respective order:
 
 - **VAULT_TOKEN** environment variable existence
 - **$HOME/.vault-token** file existence
@@ -196,19 +196,19 @@ Note that first match applies, regardless of its validity (i.e. an existing but 
 
 ## Tips & Ticks
 
-Kobra supports various environment variables to tune its behavior:
+IPSctl supports various environment variables to tune its behavior:
 
-- **KOBRA_DEBUG=1** would turn maximum verbosity.
-- **KOBRA_NOLOG=1** would completely disable logs.
+- **IPSCTL_DEBUG=1** would turn maximum verbosity.
+- **IPSCTL_NOLOG=1** would completely disable logs.
 
-Ansible deployments being somehow imperative, you won't know the end state before changes are being applied. While it is always *somehow* possible to run deployment in dry-run mode (**kobra deploy -c**), the complete execution flow is not guaranteed.
+Ansible deployments being somehow imperative, you won't know the end state before changes are being applied. While it is always *somehow* possible to run deployment in dry-run mode (**ipsctl deploy -c**), the complete execution flow is not guaranteed.
 
 If you care about planning changes (as you would get with OpenTofu/Terraform for example), it is possible to extract Ansible values as they would be interpreted, to provide pre-flight sanity checks that everything's ordered the way you expect.
 
 A simple way to collect per-host variables interpolation would be:
 
 ```sh
-$ kobra ansible inventory host -H machine_hostname -p playbook_name
+$ ipsctl ansible inventory host -H machine_hostname -p playbook_name
 ```
 
 Keep in mind that all secrets and sensitive variables, if any will be displayed plain-text.
@@ -216,14 +216,14 @@ Keep in mind that all secrets and sensitive variables, if any will be displayed 
 Another approach, more 'GitOps-friendly', is to expose per-host computed into your platform's filesystem, e.g.:
 
 ```sh
-$ kobra ansible inventory export -o path/to/gitops/ansible -f '^secret_' -f '^vault_' -p playbook_name
+$ ipsctl ansible inventory export -o path/to/gitops/ansible -f '^secret_' -f '^vault_' -p playbook_name
 ```
 
 This example will output per-host YAML files into **path/to/gitops/ansible/{group_name}** directory by ensuring that all variables starting with **secret_** or **vault_** prefixes (as defined by regexp) are redacted, as to ensure they can be stored safely on Git. Running this command prior to any actual deployment, associated with **git diff** command will provide you extra insurance that host vars changes, if any, are as expected.
 
 ## Development Guidelines
 
-Kobra development relies on [pre-commit hooks](http://www.pre-commit.com/) to ensure proper commits.
+IPSctl development relies on [pre-commit hooks](http://www.pre-commit.com/) to ensure proper commits.
 
 Follow installation instructions [here](https://pre-commit.com/#install).
 
@@ -242,7 +242,7 @@ $ pre-commit init-templatedir ~/.git-template
 
 ## Development
 
-Kobra development relies on [Semantic Versioning](https://semver.org/) and unscoped [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for development.
+IPSctl development relies on [Semantic Versioning](https://semver.org/) and unscoped [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/) for development.
 
 Changelog is automatically triggered from commits summary from the following commits types: **feat**, **fix**, **perf**, **chore**, **docs**, e.g.
 
@@ -258,7 +258,7 @@ Versioning generally follows [Semantic Versioning](https://semver.org/).
 
 ## Authors
 
-Kobra is maintained by [Kowabunga maintainers](https://github.com/orgs/kowabunga-cloud/teams/maintainers).
+IPSctl is maintained by [Kowabunga maintainers](https://github.com/orgs/kowabunga-cloud/teams/maintainers).
 
 ## License
 
