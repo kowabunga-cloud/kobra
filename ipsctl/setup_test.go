@@ -17,7 +17,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"slices"
 	"sort"
 	"testing"
 
@@ -172,7 +171,6 @@ func TestThirdPartyToolConstants(t *testing.T) {
 		ToolchainToolHelmfile,
 		ToolchainToolAnsible,
 		ToolchainToolSops,
-		ToolchainToolKubeseal,
 	}
 
 	expectedValues := []string{
@@ -181,37 +179,11 @@ func TestThirdPartyToolConstants(t *testing.T) {
 		"helmfile",
 		"ansible",
 		"sops",
-		"kubeseal",
 	}
 
 	for i, constant := range constants {
 		if constant != expectedValues[i] {
 			t.Errorf("expected constant %d to be %q, got %q", i, expectedValues[i], constant)
 		}
-	}
-}
-
-func TestToolchainToolsMapContainsKubeseal(t *testing.T) {
-	// Verify that toolchainTools map includes kubeseal
-	tool, exists := toolchainTools[KubesealBin]
-	if !exists {
-		t.Fatal("kubeseal not found in toolchainTools map")
-	}
-
-	if tool.Name != "Kubeseal" {
-		t.Errorf("expected tool name 'Kubeseal', got %q", tool.Name)
-	}
-
-	if tool.GitHubRepo != "bitnami-labs/sealed-secrets" {
-		t.Errorf("expected GitHub repo 'bitnami-labs/sealed-secrets', got %q", tool.GitHubRepo)
-	}
-
-	if len(tool.Binaries) == 0 {
-		t.Error("expected binaries to be defined")
-	}
-
-	foundKubeseal := slices.Contains(tool.Binaries, KubesealBin)
-	if !foundKubeseal {
-		t.Error("expected kubeseal binary in binaries list")
 	}
 }

@@ -168,7 +168,7 @@ func RunHelmfile(toolchainUpdate bool, cmd string, verbose, bypass bool, environ
 	}
 
 	// setup toolchain, if needed
-	err = SetupPlatformToolchain(ptfCfg, toolchainUpdate, ToolchainToolHelm, ToolchainToolHelmfile, ToolchainToolKubeseal)
+	err = SetupPlatformToolchain(ptfCfg, toolchainUpdate, ToolchainToolHelm, ToolchainToolHelmfile)
 	if err != nil {
 		return err
 	}

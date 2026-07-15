@@ -34,12 +34,12 @@ All logic lives in the `ipsctl/` package:
 
 | Area | Files | Role |
 |------|-------|------|
-| CLI commands | `commands.go`, `cmd_tf.go`, `cmd_ansible.go`, `cmd_helmfile.go`, `cmd_secrets.go`, `cmd_kubeseal.go`, `cmd_version.go` | Cobra command definitions; each tool gets its own `cmd_*.go` |
-| Tool execution | `exec.go`, `tf.go`, `ansible.go`, `helmfile.go`, `kubeseal.go`, `sops.go` | `exec.go` is the low-level binary runner; tool-specific files build args and env for it |
+| CLI commands | `commands.go`, `cmd_tf.go`, `cmd_ansible.go`, `cmd_helmfile.go`, `cmd_secrets.go`, `cmd_version.go` | Cobra command definitions; each tool gets its own `cmd_*.go` |
+| Tool execution | `exec.go`, `tf.go`, `ansible.go`, `helmfile.go`, `sops.go` | `exec.go` is the low-level binary runner; tool-specific files build args and env for it |
 | Configuration | `platform_config.go` | Parses `ipsctl.yml` — the per-platform config file users must provide |
 | Secrets | `secrets.go`, `secrets_provider_*.go` | Provider abstraction; concrete providers: `env`, `file`, `hcp` (Vault), `input`, `keyring` |
 | Infrastructure | `git.go`, `ssh.go` | Git clone/auth and SSH key management |
-| Toolchain setup | `setup.go` | Downloads and manages pinned versions of tofu/helm/helmfile/ansible/sops/kubeseal |
+| Toolchain setup | `setup.go` | Downloads and manages pinned versions of tofu/helm/helmfile/ansible/sops |
 | Utilities | `lookups.go`, `errors.go` | Shared helpers |
 
 ## Platform Configuration (`ipsctl.yml`)
@@ -48,7 +48,7 @@ Every managed platform requires a `ipsctl.yml` at its root. Key sections:
 - `git` — authentication method (ssh/http) and credentials
 - `secrets` — provider selection (`aws`/`env`/`file`/`hcp`/`input`/`keyring`) and provider-specific config; `master_key_id` references the SOPS master key
 - `ssh` — remote and bootstrap SSH user/key for Ansible
-- `toolchain` — opt-in to system tools (`use_system: true`) or pin specific versions; supports `tf`, `helm`, `helmfile`, `sops`, `kubeseal`, `ansible`
+- `toolchain` — opt-in to system tools (`use_system: true`) or pin specific versions; supports `tf`, `helm`, `helmfile`, `sops`, `ansible`
 
 ## Environment Variables
 
