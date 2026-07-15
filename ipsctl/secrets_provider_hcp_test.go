@@ -25,7 +25,7 @@ func TestHCPConstants_Defaults(t *testing.T) {
 		got      string
 		expected string
 	}{
-		{"VaultEndpointDefault", VaultEndpointDefault, "http://127.0.0.1:8200"},
+		{"VaultEndpointDefault", VaultEndpointDefault, "https://vault.internal.cinemo.com"},
 		{"VaultTokenEnvDefault", VaultTokenEnvDefault, "VAULT_TOKEN"},
 		{"VaultTokenFileDefault", VaultTokenFileDefault, ".vault-token"},
 		{"VaultUsernameEnvDefault", VaultUsernameEnvDefault, "VAULT_USERNAME"},
@@ -33,7 +33,7 @@ func TestHCPConstants_Defaults(t *testing.T) {
 		{"VaultPasswordEnvDefault", VaultPasswordEnvDefault, "VAULT_PASSWORD"},
 		{"VaultPasswordFileDefault", VaultPasswordFileDefault, ".vault-password"},
 		{"VaultMasterKeyID", VaultMasterKeyID, "ipsctl_master_key"},
-		{"VaultMountPathDefault", VaultMountPathDefault, "secret"},
+		{"VaultMountPathDefault", VaultMountPathDefault, "cloud-platforms/kv"},
 	}
 
 	for _, tt := range tests {

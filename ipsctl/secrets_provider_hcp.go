@@ -33,7 +33,7 @@ import (
 )
 
 const (
-	VaultEndpointDefault     = "http://127.0.0.1:8200"
+	VaultEndpointDefault     = "https://vault.internal.cinemo.com"
 	VaultTokenEnvDefault     = "VAULT_TOKEN"
 	VaultTokenFileDefault    = ".vault-token"
 	VaultUsernameEnvDefault  = "VAULT_USERNAME"
@@ -41,7 +41,7 @@ const (
 	VaultPasswordEnvDefault  = "VAULT_PASSWORD"
 	VaultPasswordFileDefault = ".vault-password"
 	VaultMasterKeyID         = "ipsctl_master_key"
-	VaultMountPathDefault    = "secret"
+	VaultMountPathDefault    = "cloud-platforms/kv"
 	OneDaySeconds            = (60 * 60 * 24)
 	OneWeekSeconds           = (OneDaySeconds * 7)
 )

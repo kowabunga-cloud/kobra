@@ -59,8 +59,8 @@ git:                                  # optional
     token: string                     # optional, e.g GitHub PAT (Personal Access Token)
 secrets:
   hcp:                                # optional, hcp-specific
-    endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
-    mount: string                     # optional, default to "secret" if unspecified
+    endpoint: string                  # optional, default to "https://vault.internal.cinemo.com" if unspecified
+    mount: string                     # optional, default to "cloud-platforms/kv" if unspecified
     auth_method: string               # optional, authentication-method if not token-based, accepts 'credentials' (default) and 'ldap'
     user_env: string                  # optional, default to "VAULT_USERNAME" if unspecified
     user_file: string                 # optional, default to "$HOME/.vault-username" if unspecified
