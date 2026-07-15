@@ -299,47 +299,47 @@ func (s *SecretProviderHCP) Write(path, secret string, payload map[string]any) e
 }
 
 func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
-	endpoint := ptfCfg.Secrets.HCP.Endpoint
+	endpoint := ptfCfg.Secrets.Endpoint
 	if endpoint == "" {
 		endpoint = VaultEndpointDefault
 	}
 
-	mount := ptfCfg.Secrets.HCP.Mount
+	mount := ptfCfg.Secrets.Mount
 	if mount == "" {
 		mount = VaultMountPathDefault
 	}
 
-	authMethod := ptfCfg.Secrets.HCP.AuthMethod
+	authMethod := ptfCfg.Secrets.AuthMethod
 	if authMethod == "" {
 		authMethod = SecretsHCPAuthMethodCredentials
 	}
 
-	tokenEnv := ptfCfg.Secrets.HCP.TokenEnv
+	tokenEnv := ptfCfg.Secrets.TokenEnv
 	if tokenEnv == "" {
 		tokenEnv = VaultTokenEnvDefault
 	}
 
-	tokenFile := ptfCfg.Secrets.HCP.TokenFile
+	tokenFile := ptfCfg.Secrets.TokenFile
 	if tokenFile == "" {
 		tokenFile = VaultTokenFileDefault
 	}
 
-	usernameEnv := ptfCfg.Secrets.HCP.UsernameEnv
+	usernameEnv := ptfCfg.Secrets.UsernameEnv
 	if usernameEnv == "" {
 		usernameEnv = VaultUsernameEnvDefault
 	}
 
-	usernameFile := ptfCfg.Secrets.HCP.UsernameFile
+	usernameFile := ptfCfg.Secrets.UsernameFile
 	if usernameFile == "" {
 		usernameFile = VaultUsernameFileDefault
 	}
 
-	passwordEnv := ptfCfg.Secrets.HCP.PasswordEnv
+	passwordEnv := ptfCfg.Secrets.PasswordEnv
 	if passwordEnv == "" {
 		passwordEnv = VaultPasswordEnvDefault
 	}
 
-	passwordFile := ptfCfg.Secrets.HCP.PasswordFile
+	passwordFile := ptfCfg.Secrets.PasswordFile
 	if passwordFile == "" {
 		passwordFile = VaultPasswordFileDefault
 	}

@@ -58,16 +58,15 @@ git:                                  # optional
     password: string                  # optional, basic auth password
     token: string                     # optional, e.g GitHub PAT (Personal Access Token)
 secrets:
-  hcp:                                # optional, hcp-specific
-    endpoint: string                  # optional, default to "https://vault.internal.cinemo.com" if unspecified
-    mount: string                     # optional, default to "cloud-platforms/kv" if unspecified
-    auth_method: string               # optional, authentication-method if not token-based, accepts 'credentials' (default) and 'ldap'
-    user_env: string                  # optional, default to "VAULT_USERNAME" if unspecified
-    user_file: string                 # optional, default to "$HOME/.vault-username" if unspecified
-    password_env: string              # optional, default to "VAULT_PASSWORD" if unspecified
-    password_file: string             # optional, default to "$HOME/.vault-password" if unspecified
-    token_env: string                 # optional, default to "VAULT_TOKEN" if unspecified
-    token_file: string                # optional, default to "$HOME/.vault-token" if unspecified
+  endpoint: string                    # optional, default to "https://vault.internal.cinemo.com" if unspecified
+  mount: string                       # optional, default to "cloud-platforms/kv" if unspecified
+  auth_method: string                 # optional, authentication-method if not token-based, accepts 'credentials' (default) and 'ldap'
+  username_env: string                # optional, default to "VAULT_USERNAME" if unspecified
+  username_file: string               # optional, default to "$HOME/.vault-username" if unspecified
+  password_env: string                # optional, default to "VAULT_PASSWORD" if unspecified
+  password_file: string               # optional, default to "$HOME/.vault-password" if unspecified
+  token_env: string                   # optional, default to "VAULT_TOKEN" if unspecified
+  token_file: string                  # optional, default to "$HOME/.vault-token" if unspecified
   master_key_id: string
   sync_maps:                          # optional, list of mapped local/remote secrets, defaults to []
     - path: string                    # optional, path to secret, default one if unspecified.

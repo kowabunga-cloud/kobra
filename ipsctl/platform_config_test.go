@@ -34,9 +34,7 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 					Method: GitMethodSSH,
 				},
 				Secrets: PlatformConfigSecrets{
-					HCP: PlatformConfigSecretsHCP{
-						AuthMethod: SecretsHCPAuthMethodCredentials,
-					},
+					AuthMethod: SecretsHCPAuthMethodCredentials,
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{
@@ -81,9 +79,7 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 					Method: GitMethodUnknown,
 				},
 				Secrets: PlatformConfigSecrets{
-					HCP: PlatformConfigSecretsHCP{
-						AuthMethod: SecretsHCPAuthMethodCredentials,
-					},
+					AuthMethod: SecretsHCPAuthMethodCredentials,
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{
@@ -327,7 +323,7 @@ func TestPlatformConfig_IsValid_HCPAuthMethod(t *testing.T) {
 			cfg := &PlatformConfig{
 				Git: PlatformConfigGit{Method: GitMethodSSH},
 				Secrets: PlatformConfigSecrets{
-					HCP: PlatformConfigSecretsHCP{AuthMethod: tt.authMethod},
+					AuthMethod: tt.authMethod,
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{Provider: TfProviderOpenTofu},
@@ -492,9 +488,7 @@ func TestPlatformConfigYAMLMarshaling(t *testing.T) {
 		},
 		Secrets: PlatformConfigSecrets{
 			MasterKeyID: "test-key",
-			HCP: PlatformConfigSecretsHCP{
-				Endpoint: "https://vault.example.com",
-			},
+			Endpoint:    "https://vault.example.com",
 		},
 		SSH: PlatformConfigSSH{
 			Remote: PlatformConfigSshConfig{
@@ -531,8 +525,8 @@ func TestPlatformConfigYAMLMarshaling(t *testing.T) {
 	if decoded.Git.Method != config.Git.Method {
 		t.Errorf("expected git method %q, got %q", config.Git.Method, decoded.Git.Method)
 	}
-	if decoded.Secrets.HCP.Endpoint != config.Secrets.HCP.Endpoint {
-		t.Errorf("expected HCP endpoint %q, got %q", config.Secrets.HCP.Endpoint, decoded.Secrets.HCP.Endpoint)
+	if decoded.Secrets.Endpoint != config.Secrets.Endpoint {
+		t.Errorf("expected HCP endpoint %q, got %q", config.Secrets.Endpoint, decoded.Secrets.Endpoint)
 	}
 	if decoded.Toolchain.TF.Provider != config.Toolchain.TF.Provider {
 		t.Errorf("expected tf provider %q, got %q", config.Toolchain.TF.Provider, decoded.Toolchain.TF.Provider)

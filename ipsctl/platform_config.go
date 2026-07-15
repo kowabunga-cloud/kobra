@@ -53,11 +53,19 @@ type PlatformConfigGitHTTP struct {
 	Token    string `yaml:"token,omitempty"`
 }
 
-// PlatformConfigSecrets contains secrets-specific configuration
+// PlatformConfigSecrets contains secrets-specific configuration (Hashicorp Vault backend)
 type PlatformConfigSecrets struct {
-	MasterKeyID string                         `yaml:"master_key_id"`
-	SyncMaps    []PlatformConfigSecretsSyncMap `yaml:"sync_maps,omitempty"`
-	HCP         PlatformConfigSecretsHCP       `yaml:"hcp,omitempty"`
+	MasterKeyID  string                         `yaml:"master_key_id"`
+	SyncMaps     []PlatformConfigSecretsSyncMap `yaml:"sync_maps,omitempty"`
+	Endpoint     string                         `yaml:"endpoint,omitempty"`
+	Mount        string                         `yaml:"mount,omitempty"`
+	AuthMethod   string                         `yaml:"auth_method,omitempty"`
+	TokenEnv     string                         `yaml:"token_env,omitempty"`
+	TokenFile    string                         `yaml:"token_file,omitempty"`
+	UsernameEnv  string                         `yaml:"username_env,omitempty"`
+	UsernameFile string                         `yaml:"username_file,omitempty"`
+	PasswordEnv  string                         `yaml:"password_env,omitempty"`
+	PasswordFile string                         `yaml:"password_file,omitempty"`
 }
 
 // PlatformConfigSSH contains ssh-specific configuration
@@ -77,19 +85,6 @@ type PlatformConfigSecretsSyncMap struct {
 	Path     string `yaml:"path,omitempty"`
 	Secret   string `yaml:"secret"`
 	SopsFile string `yaml:"sops_file"`
-}
-
-// PlatformConfigSecretsHCP contains Hashicorp Vault secrets-specific configuration
-type PlatformConfigSecretsHCP struct {
-	Endpoint     string `yaml:"endpoint,omitempty"`
-	Mount        string `yaml:"mount,omitempty"`
-	AuthMethod   string `yaml:"auth_method,omitempty"`
-	TokenEnv     string `yaml:"token_env,omitempty"`
-	TokenFile    string `yaml:"token_file,omitempty"`
-	UsernameEnv  string `yaml:"username_env,omitempty"`
-	UsernameFile string `yaml:"username_file,omitempty"`
-	PasswordEnv  string `yaml:"password_env,omitempty"`
-	PasswordFile string `yaml:"password_file,omitempty"`
 }
 
 // PlatformConfigToolchain toolchain-specific configuration
@@ -192,7 +187,7 @@ func (p *PlatformConfig) IsValid() error {
 	params := []configParam{
 		configParam{p.Git.Method, isSupportedGitMethod, "git method"},
 		configParam{p.Toolchain.TF.Provider, isSupportedTfProvider, "TF provider"},
-		configParam{p.Secrets.HCP.AuthMethod, isSupportedSecretsHcpAuthMethod, "HCP Vault auth method"},
+		configParam{p.Secrets.AuthMethod, isSupportedSecretsHcpAuthMethod, "HCP Vault auth method"},
 	}
 
 	for _, pr := range params {
@@ -277,7 +272,7 @@ func GetPlatformConfig() (*PlatformConfig, error) {
 
 	// set default value
 	LookupDefault(&cfg.Git.Method, "Git Method", GitMethodUnknown)
-	LookupDefault(&cfg.Secrets.HCP.AuthMethod, "HCP Auth Method", SecretsHCPAuthMethodCredentials)
+	LookupDefault(&cfg.Secrets.AuthMethod, "HCP Auth Method", SecretsHCPAuthMethodCredentials)
 	LookupDefault(&cfg.Toolchain.TF.Provider, "TF Provider", TfProviderOpenTofu)
 	LookupDefault(&cfg.Toolchain.TF.Version, "TF Version", ToolchainVersionLatest)
 	LookupDefault(&cfg.Toolchain.Helm.Version, "Helm Version", ToolchainVersionLatest)

@@ -64,8 +64,7 @@ func TestHCPTimeConstants(t *testing.T) {
 func TestNewSecretProviderHCP_Defaults(t *testing.T) {
 	ptfCfg := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			MasterKeyID: "test-key",
-			HCP:         PlatformConfigSecretsHCP{}, // all empty → use defaults
+			MasterKeyID: "test-key", // all else empty → use defaults
 		},
 	}
 
@@ -102,18 +101,16 @@ func TestNewSecretProviderHCP_Defaults(t *testing.T) {
 func TestNewSecretProviderHCP_CustomValues(t *testing.T) {
 	ptfCfg := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			MasterKeyID: "my-key",
-			HCP: PlatformConfigSecretsHCP{
-				Endpoint:     "http://custom-vault:8200",
-				Mount:        "my-mount",
-				AuthMethod:   SecretsHCPAuthMethodLdap,
-				TokenEnv:     "MY_VAULT_TOKEN",
-				TokenFile:    "/custom/.vault-token",
-				UsernameEnv:  "MY_VAULT_USER",
-				UsernameFile: "/custom/.vault-user",
-				PasswordEnv:  "MY_VAULT_PASS",
-				PasswordFile: "/custom/.vault-pass",
-			},
+			MasterKeyID:  "my-key",
+			Endpoint:     "http://custom-vault:8200",
+			Mount:        "my-mount",
+			AuthMethod:   SecretsHCPAuthMethodLdap,
+			TokenEnv:     "MY_VAULT_TOKEN",
+			TokenFile:    "/custom/.vault-token",
+			UsernameEnv:  "MY_VAULT_USER",
+			UsernameFile: "/custom/.vault-user",
+			PasswordEnv:  "MY_VAULT_PASS",
+			PasswordFile: "/custom/.vault-pass",
 		},
 	}
 
@@ -147,9 +144,7 @@ func TestNewSecretProviderHCP_CustomValues(t *testing.T) {
 
 func TestSecretProviderHCP_IsSupported(t *testing.T) {
 	ptfCfg := &PlatformConfig{
-		Secrets: PlatformConfigSecrets{
-			HCP: PlatformConfigSecretsHCP{},
-		},
+		Secrets: PlatformConfigSecrets{},
 	}
 	provider, err := NewSecretProviderHCP(ptfCfg)
 	if err != nil {
@@ -233,9 +228,7 @@ func TestSecretProviderHCP_Login_FromEnv(t *testing.T) {
 	// without making any network calls (token validation would fail on non-existent server)
 	ptfCfg := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			HCP: PlatformConfigSecretsHCP{
-				TokenEnv: "TEST_VAULT_TOKEN_HCP",
-			},
+			TokenEnv: "TEST_VAULT_TOKEN_HCP",
 		},
 	}
 
