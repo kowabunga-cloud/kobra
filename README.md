@@ -1,9 +1,5 @@
 <p align="center">
-  <picture>
-    <source srcset="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" media="(prefers-color-scheme: dark)" />
-    <source srcset="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" media="(prefers-color-scheme: light), (prefers-color-scheme: no-preference)" />
-    <img src="https://raw.githubusercontent.com/kowabunga-cloud/infographics/master/art/kobra-raw.png" alt="IPSctl" width="200">
-  </picture>
+  <img src="ipsctl.png" alt="IPSctl" width="200">
 </p>
 
 # IPSctl
