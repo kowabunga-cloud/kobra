@@ -64,7 +64,6 @@ func TestHCPTimeConstants(t *testing.T) {
 func TestNewSecretProviderHCP_Defaults(t *testing.T) {
 	ptfCfg := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			Provider:    SecretsProviderHCP,
 			MasterKeyID: "test-key",
 			HCP:         PlatformConfigSecretsHCP{}, // all empty → use defaults
 		},
@@ -103,7 +102,6 @@ func TestNewSecretProviderHCP_Defaults(t *testing.T) {
 func TestNewSecretProviderHCP_CustomValues(t *testing.T) {
 	ptfCfg := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			Provider:    SecretsProviderHCP,
 			MasterKeyID: "my-key",
 			HCP: PlatformConfigSecretsHCP{
 				Endpoint:     "http://custom-vault:8200",

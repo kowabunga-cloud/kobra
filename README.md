@@ -58,16 +58,7 @@ git:                                  # optional
     password: string                  # optional, basic auth password
     token: string                     # optional, e.g GitHub PAT (Personal Access Token)
 secrets:
-  provider: string                    # aws, env, file, hcp, input, keyring
-  aws:                                # optional, aws-provider specific
-    region: string
-    role_arn: string
-    id: string
-  env:                                # optional, env-provider specific
-    var: string                       # optional, defaults to IPSCTL_MASTER_KEY
-  file:                               # optional, file-provider specific
-    path: string
-  hcp:                                # optional, hcp-provider specific
+  hcp:                                # optional, hcp-specific
     endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
     mount: string                     # optional, default to "secret" if unspecified
     auth_method: string               # optional, authentication-method if not token-based, accepts 'credentials' (default) and 'ldap'
@@ -78,7 +69,7 @@ secrets:
     token_env: string                 # optional, default to "VAULT_TOKEN" if unspecified
     token_file: string                # optional, default to "$HOME/.vault-token" if unspecified
   master_key_id: string
-  sync_maps:                          # optional, list of mapped local/remote secrets, defaults to [], when supported by secrets provider (currently 'hcp' only)
+  sync_maps:                          # optional, list of mapped local/remote secrets, defaults to []
     - path: string                    # optional, path to secret, default one if unspecified.
       secret: string                  # path to mapped secret in remote secret's provider
       sops_file: string               # path to plaform local SOPS encrypted secrets file
@@ -148,18 +139,9 @@ host-2 ansible_host=192.168.0.2 ansible_ssh_user=ubuntu ansible_ssh_private_key_
 
 ## Secrets Management
 
-IPSctl supports different secrets management **providers**:
+IPSctl exclusively manages secrets through **Hashicorp Vault (HCP)**.
 
-- **aws**: AWS Secrets Manager (*TODO*)
-- **env**: Environment variable stored master-key
-- **file**: local plain text master-key file (not recommended for production)
-- **hcp**: Hashicorp Vault
-- **input**: interactive command-line input prompt for master-key
-- **keyring**: local OS keyring (macOS Keychain, Windows Credentials Manager, Linux Gnome Keyring/KWallet)
-
-**WARNING**: it is highly recommended not to use local secret management backends if secret is to be used by other contributors. When working as a team, always rely on distributed secret management backends.
-
-On supported providers (currently only **hcp**), IPSctl has optional support for 2-ways sync maps. This allows keep local SOPS-encrypted secrets in sync with remote secrets-provider hosted ones. This comes in handy when you're having a proper GitOps approach with [External Secrets Manager](https://external-secrets.io/latest/) for example and yet want to keep the convenience of using **ipsctl secrets edit** command to simply edit our secrets.
+IPSctl has optional support for 2-ways sync maps. This allows keep local SOPS-encrypted secrets in sync with remote Vault-hosted ones. This comes in handy when you're having a proper GitOps approach with [External Secrets Manager](https://external-secrets.io/latest/) for example and yet want to keep the convenience of using **ipsctl secrets edit** command to simply edit our secrets.
 
 Note that synchronization is both-ways and takes both content and last modified timestamp to determine precedence. If local SOPS file is more up-to-date, remote one will be updated. If remote one has been modified, changes will be fetched into local one prior to any edition.
 

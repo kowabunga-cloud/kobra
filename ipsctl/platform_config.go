@@ -55,12 +55,8 @@ type PlatformConfigGitHTTP struct {
 
 // PlatformConfigSecrets contains secrets-specific configuration
 type PlatformConfigSecrets struct {
-	Provider    string                         `yaml:"provider"`
 	MasterKeyID string                         `yaml:"master_key_id"`
 	SyncMaps    []PlatformConfigSecretsSyncMap `yaml:"sync_maps,omitempty"`
-	AWS         PlatformConfigSecretsAWS       `yaml:"aws,omitempty"`
-	Env         PlatformConfigSecretsEnv       `yaml:"env,omitempty"`
-	File        PlatformConfigSecretsFile      `yaml:"file,omitempty"`
 	HCP         PlatformConfigSecretsHCP       `yaml:"hcp,omitempty"`
 }
 
@@ -81,23 +77,6 @@ type PlatformConfigSecretsSyncMap struct {
 	Path     string `yaml:"path,omitempty"`
 	Secret   string `yaml:"secret"`
 	SopsFile string `yaml:"sops_file"`
-}
-
-// PlatformConfigSecretsAWS contains AWS Secrets Manager secrets-specific configuration
-type PlatformConfigSecretsAWS struct {
-	Region  string `yaml:"region"`
-	ID      string `yaml:"id"`
-	RoleARN string `yaml:"role_arn"`
-}
-
-// PlatformConfigSecretsEnv contains environment variable secrets-specific configuration
-type PlatformConfigSecretsEnv struct {
-	Var string `yaml:"var,omitempty"`
-}
-
-// PlatformConfigSecretsFile contains file-based secrets-specific configuration
-type PlatformConfigSecretsFile struct {
-	Path string `yaml:"path"`
 }
 
 // PlatformConfigSecretsHCP contains Hashicorp Vault secrets-specific configuration
@@ -161,13 +140,6 @@ const (
 
 	GitDefaultUserSSH = "git"
 
-	SecretsProviderAWS     = "aws"
-	SecretsProviderEnv     = "env"
-	SecretsProviderFile    = "file"
-	SecretsProviderHCP     = "hcp"
-	SecretsProviderInput   = "input"
-	SecretsProviderKeyring = "keyring"
-
 	SecretsHCPAuthMethodCredentials = "credentials"
 	SecretsHCPAuthMethodLdap        = "ldap"
 
@@ -183,20 +155,6 @@ func isSupportedGitMethod(method string) bool {
 		GitMethodUnknown,
 		GitMethodSSH,
 		GitMethodHTTP:
-		return true
-	}
-	return false
-}
-
-func isSupportedSecretsProvider(provider string) bool {
-	switch provider {
-	case
-		SecretsProviderAWS,
-		SecretsProviderEnv,
-		SecretsProviderFile,
-		SecretsProviderHCP,
-		SecretsProviderInput,
-		SecretsProviderKeyring:
 		return true
 	}
 	return false
@@ -233,7 +191,6 @@ func (p *PlatformConfig) IsValid() error {
 
 	params := []configParam{
 		configParam{p.Git.Method, isSupportedGitMethod, "git method"},
-		configParam{p.Secrets.Provider, isSupportedSecretsProvider, "secrets provider"},
 		configParam{p.Toolchain.TF.Provider, isSupportedTfProvider, "TF provider"},
 		configParam{p.Secrets.HCP.AuthMethod, isSupportedSecretsHcpAuthMethod, "HCP Vault auth method"},
 	}

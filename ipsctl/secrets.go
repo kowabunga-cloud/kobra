@@ -59,46 +59,7 @@ type SecretsProvider interface {
 }
 
 func GetSecretsProvider(ptfCfg *PlatformConfig) (SecretsProvider, error) {
-	var spi SecretsProvider
-	switch ptfCfg.Secrets.Provider {
-	case SecretsProviderEnv:
-		sp, err := NewSecretProviderEnv(ptfCfg)
-		if err != nil {
-			return nil, err
-		}
-		spi = sp
-		return spi, nil
-	case SecretsProviderFile:
-		sp, err := NewSecretProviderFile(ptfCfg)
-		if err != nil {
-			return nil, err
-		}
-		spi = sp
-		return spi, nil
-	case SecretsProviderHCP:
-		sp, err := NewSecretProviderHCP(ptfCfg)
-		if err != nil {
-			return nil, err
-		}
-		spi = sp
-		return spi, nil
-	case SecretsProviderInput:
-		sp, err := NewSecretProviderInput(ptfCfg)
-		if err != nil {
-			return nil, err
-		}
-		spi = sp
-		return spi, nil
-	case SecretsProviderKeyring:
-		sp, err := NewSecretProviderKeyring(ptfCfg)
-		if err != nil {
-			return nil, err
-		}
-		spi = sp
-		return spi, nil
-	}
-
-	return nil, fmt.Errorf("unknown secret provider type")
+	return NewSecretProviderHCP(ptfCfg)
 }
 
 func setSopsEnv(secrets *IPSctlSecretData) ([]string, string, error) {

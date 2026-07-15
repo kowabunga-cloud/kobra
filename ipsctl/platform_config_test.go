@@ -34,7 +34,6 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 					Method: GitMethodSSH,
 				},
 				Secrets: PlatformConfigSecrets{
-					Provider: SecretsProviderFile,
 					HCP: PlatformConfigSecretsHCP{
 						AuthMethod: SecretsHCPAuthMethodCredentials,
 					},
@@ -53,26 +52,6 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 				Git: PlatformConfigGit{
 					Method: "invalid_method",
 				},
-				Secrets: PlatformConfigSecrets{
-					Provider: SecretsProviderFile,
-				},
-				Toolchain: PlatformConfigToolchain{
-					TF: PlatformConfigToolchainTF{
-						Provider: TfProviderOpenTofu,
-					},
-				},
-			},
-			expectErr: true,
-		},
-		{
-			name: "invalid secrets provider",
-			config: &PlatformConfig{
-				Git: PlatformConfigGit{
-					Method: GitMethodSSH,
-				},
-				Secrets: PlatformConfigSecrets{
-					Provider: "invalid_provider",
-				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{
 						Provider: TfProviderOpenTofu,
@@ -86,9 +65,6 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 			config: &PlatformConfig{
 				Git: PlatformConfigGit{
 					Method: GitMethodSSH,
-				},
-				Secrets: PlatformConfigSecrets{
-					Provider: SecretsProviderFile,
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{
@@ -105,7 +81,6 @@ func TestPlatformConfig_IsValid(t *testing.T) {
 					Method: GitMethodUnknown,
 				},
 				Secrets: PlatformConfigSecrets{
-					Provider: SecretsProviderEnv,
 					HCP: PlatformConfigSecretsHCP{
 						AuthMethod: SecretsHCPAuthMethodCredentials,
 					},
@@ -163,7 +138,6 @@ func TestGetPlatformConfig(t *testing.T) {
 					Method: GitMethodSSH,
 				},
 				Secrets: PlatformConfigSecrets{
-					Provider:    SecretsProviderFile,
 					MasterKeyID: "test-key-id",
 				},
 				Toolchain: PlatformConfigToolchain{
@@ -176,12 +150,8 @@ func TestGetPlatformConfig(t *testing.T) {
 			expectErr: false,
 		},
 		{
-			name: "config with defaults",
-			config: &PlatformConfig{
-				Secrets: PlatformConfigSecrets{
-					Provider: SecretsProviderEnv,
-				},
-			},
+			name:      "config with defaults",
+			config:    &PlatformConfig{},
 			expectErr: false,
 		},
 	}
@@ -297,31 +267,6 @@ func TestIsSupportedGitMethod(t *testing.T) {
 	}
 }
 
-func TestIsSupportedSecretsProvider(t *testing.T) {
-	tests := []struct {
-		provider string
-		expected bool
-	}{
-		{SecretsProviderAWS, true},
-		{SecretsProviderEnv, true},
-		{SecretsProviderFile, true},
-		{SecretsProviderHCP, true},
-		{SecretsProviderInput, true},
-		{SecretsProviderKeyring, true},
-		{"invalid", false},
-		{"vault", false},
-	}
-
-	for _, tt := range tests {
-		t.Run(tt.provider, func(t *testing.T) {
-			result := isSupportedSecretsProvider(tt.provider)
-			if result != tt.expected {
-				t.Errorf("expected %v for provider %q, got %v", tt.expected, tt.provider, result)
-			}
-		})
-	}
-}
-
 func TestIsSupportedTfProvider(t *testing.T) {
 	tests := []struct {
 		provider string
@@ -382,8 +327,7 @@ func TestPlatformConfig_IsValid_HCPAuthMethod(t *testing.T) {
 			cfg := &PlatformConfig{
 				Git: PlatformConfigGit{Method: GitMethodSSH},
 				Secrets: PlatformConfigSecrets{
-					Provider: SecretsProviderFile,
-					HCP:      PlatformConfigSecretsHCP{AuthMethod: tt.authMethod},
+					HCP: PlatformConfigSecretsHCP{AuthMethod: tt.authMethod},
 				},
 				Toolchain: PlatformConfigToolchain{
 					TF: PlatformConfigToolchainTF{Provider: TfProviderOpenTofu},
@@ -403,7 +347,6 @@ func TestPlatformConfig_IsValid_HCPAuthMethod(t *testing.T) {
 func TestPlatformConfigSecretsSyncMap_YAML(t *testing.T) {
 	config := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			Provider: SecretsProviderHCP,
 			SyncMaps: []PlatformConfigSecretsSyncMap{
 				{
 					Path:     "my-mount",
@@ -469,7 +412,6 @@ func TestGetPlatformConfig_WithCustomConfig(t *testing.T) {
 	baseCfg := &PlatformConfig{
 		Git: PlatformConfigGit{Method: GitMethodSSH},
 		Secrets: PlatformConfigSecrets{
-			Provider:    SecretsProviderFile,
 			MasterKeyID: "base-key-id",
 		},
 		Toolchain: PlatformConfigToolchain{
@@ -492,7 +434,6 @@ func TestGetPlatformConfig_WithCustomConfig(t *testing.T) {
 	// Custom config overrides MasterKeyID only
 	customCfg := &PlatformConfig{
 		Secrets: PlatformConfigSecrets{
-			Provider:    SecretsProviderFile,
 			MasterKeyID: "custom-key-id",
 		},
 	}
@@ -550,10 +491,9 @@ func TestPlatformConfigYAMLMarshaling(t *testing.T) {
 			},
 		},
 		Secrets: PlatformConfigSecrets{
-			Provider:    SecretsProviderFile,
 			MasterKeyID: "test-key",
-			File: PlatformConfigSecretsFile{
-				Path: "/path/to/secret",
+			HCP: PlatformConfigSecretsHCP{
+				Endpoint: "https://vault.example.com",
 			},
 		},
 		SSH: PlatformConfigSSH{
@@ -591,8 +531,8 @@ func TestPlatformConfigYAMLMarshaling(t *testing.T) {
 	if decoded.Git.Method != config.Git.Method {
 		t.Errorf("expected git method %q, got %q", config.Git.Method, decoded.Git.Method)
 	}
-	if decoded.Secrets.Provider != config.Secrets.Provider {
-		t.Errorf("expected secrets provider %q, got %q", config.Secrets.Provider, decoded.Secrets.Provider)
+	if decoded.Secrets.HCP.Endpoint != config.Secrets.HCP.Endpoint {
+		t.Errorf("expected HCP endpoint %q, got %q", config.Secrets.HCP.Endpoint, decoded.Secrets.HCP.Endpoint)
 	}
 	if decoded.Toolchain.TF.Provider != config.Toolchain.TF.Provider {
 		t.Errorf("expected tf provider %q, got %q", config.Toolchain.TF.Provider, decoded.Toolchain.TF.Provider)
