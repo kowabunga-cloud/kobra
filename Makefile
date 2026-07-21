@@ -1,5 +1,8 @@
-# Copyright (c) The Kowabunga Project
-# Apache License, Version 2.0 (see LICENSE or https://www.apache.org/licenses/LICENSE-2.0.txt)
+# Copyright (c) Cinemo GmbH. All rights reserved.
+#
+# This file is proprietary and confidential. Unauthorized copying,
+# distribution, or use, via any medium, is strictly prohibited without
+# prior written permission from Cinemo GmbH.
 
 PKG_NAME=github.com/Cinemo-Product-Engineering/ipsctl/ipsctl
 VERSION=$(shell git describe --tags --always --dirty)
