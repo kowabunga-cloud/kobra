@@ -53,7 +53,7 @@ build: ; $(info $(M) building executables…) @ ## Build binaries
 		-o $(BINDIR) ./...
 
 .PHONY: release
-release: mod fmt vet fix lint get-goreleaser ; @
+release: mod fmt vet fix lint sec vuln get-goreleaser ; @
 	$Q PKG_NAME=$(PKG_NAME) VERSION=$(VERSION) $(GORELEASER) build --snapshot --clean
 
 .PHONY: get-lint
