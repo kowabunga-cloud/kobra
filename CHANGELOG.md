@@ -2,6 +2,17 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.6.0](https://github.com/kowabunga-cloud/kobra/compare/v0.5.3...v0.6.0) (2026-07-21)
+
+### Chores
+
+* ignore .repowise dir, if any ([c36d982](https://github.com/kowabunga-cloud/kobra/commit/c36d9820eb18eb917bc86a0f2c8f85bb28f42d3a))
+* update build dependancies ([96d8a0d](https://github.com/kowabunga-cloud/kobra/commit/96d8a0d707dee84942c5946ca293614989575c39))
+
+### Features
+
+* extend HCP secrets provider with appRole authentication ([7e18c6d](https://github.com/kowabunga-cloud/kobra/commit/7e18c6d86b84a26e9eff51827eb4ba61e63e7c3e))
+
 ## [0.5.3](https://github.com/kowabunga-cloud/kobra/compare/v0.5.2...v0.5.3) (2026-07-13)
 
 ### Chores
