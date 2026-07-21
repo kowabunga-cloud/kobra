@@ -1,4 +1,5 @@
 .claude/
+.repowise/
 bin/
 dist/
 publish/
