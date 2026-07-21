@@ -1,0 +1,37 @@
+name: Verify PR
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+env:
+  GO_VERSION: 1.26
+
+jobs:
+  ci:
+    name: Continuous Integration
+    runs-on: [self-hosted, linux, x64, generic]
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v7
+      - name: Setup Go
+        uses: actions/setup-go@v7
+        with:
+          go-version: ${{ env.GO_VERSION }}
+      - name: Retrieve dependencies
+        run: make mod
+      - name: Code Acceptance
+        run: make vet
+      - name: Linter
+        run: make lint
+      - name: Build
+        run: make build
+      - name: Tests
+        run: make tests
+      - name: Run Gosec Security Scanner
+        run: make sec
+      - name: Run GoVulnCheck security scanner
+        run: make vuln
