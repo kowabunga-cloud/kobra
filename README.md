@@ -218,7 +218,7 @@ Versioning generally follows [Semantic Versioning](https://semver.org/).
 
 ## Authors
 
-IPSctl is maintained by [Kowabunga maintainers](https://github.com/orgs/kowabunga-cloud/teams/maintainers).
+IPSctl is maintained by [Cinemo Cloud DevOps team](https://github.com/orgs/Cinemo-Product-Engineering/teams/cloud-devops).
 
 ## License
 
