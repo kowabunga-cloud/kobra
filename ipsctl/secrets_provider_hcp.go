@@ -33,32 +33,41 @@ import (
 )
 
 const (
-	VaultEndpointDefault     = "https://vault.internal.cinemo.com"
-	VaultTokenEnvDefault     = "VAULT_TOKEN"
-	VaultTokenFileDefault    = ".vault-token"
-	VaultUsernameEnvDefault  = "VAULT_USERNAME"
-	VaultUsernameFileDefault = ".vault-username"
-	VaultPasswordEnvDefault  = "VAULT_PASSWORD"
-	VaultPasswordFileDefault = ".vault-password"
-	VaultMasterKeyID         = "ipsctl_master_key"
-	VaultMountPathDefault    = "cloud-platforms/kv"
-	OneDaySeconds            = (60 * 60 * 24)
-	OneWeekSeconds           = (OneDaySeconds * 7)
+	VaultEndpointDefault          = "https://vault.internal.cinemo.com"
+	VaultTokenEnvDefault          = "VAULT_TOKEN"
+	VaultTokenFileDefault         = ".vault-token"
+	VaultAppRoleIdEnvDefault      = "VAULT_APPROLE_ROLE_ID"
+	VaultAppRoleIdFileDefault     = ".vault-app-role-id"
+	VaultAppRoleSecretEnvDefault  = "VAULT_APPROLE_SECRET_ID"   // #nosec G101
+	VaultAppRoleSecretFileDefault = ".vault-app-role-secret-id" // #nosec G101
+	VaultAppRolePathDefault       = "ipsctl"
+	VaultUsernameEnvDefault       = "VAULT_USERNAME"
+	VaultUsernameFileDefault      = ".vault-username"
+	VaultPasswordEnvDefault       = "VAULT_PASSWORD"
+	VaultPasswordFileDefault      = ".vault-password"
+	VaultMasterKeyID              = "ipsctl_master_key"
+	VaultMountPathDefault         = "cloud-platforms/kv"
+	OneDaySeconds                 = (60 * 60 * 24)
+	OneWeekSeconds                = (OneDaySeconds * 7)
 )
 
 type SecretProviderHCP struct {
-	ctx          context.Context
-	Client       *vault.Client
-	ID           string
-	Mount        string
-	AuthMethod   string
-	Token        string
-	TokenEnv     string
-	TokenFile    string
-	UsernameEnv  string
-	UsernameFile string
-	PasswordEnv  string
-	PasswordFile string
+	ctx               context.Context
+	Client            *vault.Client
+	ID                string
+	Mount             string
+	AuthMethod        string
+	Token             string
+	TokenEnv          string
+	TokenFile         string
+	AppRoleIdEnv      string
+	AppRoleIdFile     string
+	AppRoleSecretEnv  string
+	AppRoleSecretFile string
+	UsernameEnv       string
+	UsernameFile      string
+	PasswordEnv       string
+	PasswordFile      string
 }
 
 func (s *SecretProviderHCP) readFromFile(src, dflt string) (string, error) {
@@ -136,6 +145,30 @@ func (s *SecretProviderHCP) UserpassLogin(username, password string) error {
 	return nil
 }
 
+func (s *SecretProviderHCP) AppRoleLogin(role, secret string) error {
+	err := s.Client.SetNamespace("admin")
+	if err != nil {
+		return err
+	}
+
+	resp, err := s.Client.Auth.AppRoleLogin(
+		s.ctx,
+		schema.AppRoleLoginRequest{
+			RoleId:   role,
+			SecretId: secret,
+		},
+		vault.WithMountPath(VaultAppRolePathDefault),
+	)
+
+	if err != nil {
+		return err
+	}
+
+	s.Token = resp.Auth.ClientToken
+
+	return nil
+}
+
 func (s *SecretProviderHCP) IsSupported(feature string) bool {
 	return feature == SecretsFeatureSyncMap
 }
@@ -159,7 +192,39 @@ func (s *SecretProviderHCP) Login() error {
 		}
 	}
 
-	// Try #3: Environment variables for username and password
+	// Try #3: Environment variable for appRole ID and secret
+	if s.Token == "" {
+		klog.Debugf("Trying Vault appRole-authentication from environment variable")
+		role, roleOk := os.LookupEnv(s.AppRoleIdEnv)
+		secret, secretOk := os.LookupEnv(s.AppRoleSecretEnv)
+		if roleOk && secretOk {
+			err = s.AppRoleLogin(role, secret)
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	// Try #4: appRole ID and secret from files
+	if s.Token == "" {
+		klog.Debugf("Trying Vault appRole-authentication from files")
+		role, err := s.readFromFile(s.AppRoleIdFile, VaultAppRoleIdFileDefault)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		secret, err := s.readFromFile(s.AppRoleSecretFile, VaultAppRoleSecretFileDefault)
+		if err != nil && !os.IsNotExist(err) {
+			return err
+		}
+
+		err = s.AppRoleLogin(role, secret)
+		if err != nil {
+			return err
+		}
+	}
+
+	// Try #5: Environment variables for username and password
 	if s.Token == "" {
 		klog.Debugf("Trying Vault user/pass-authentication from environment variable")
 		username, usernameOk := os.LookupEnv(s.UsernameEnv)
@@ -172,7 +237,7 @@ func (s *SecretProviderHCP) Login() error {
 		}
 	}
 
-	// Try #4: username and password from files
+	// Try #6: username and password from files
 	if s.Token == "" {
 		klog.Debugf("Trying Vault user/pass-authentication from files")
 		username, err := s.readFromFile(s.UsernameFile, VaultUsernameFileDefault)
@@ -191,7 +256,7 @@ func (s *SecretProviderHCP) Login() error {
 		}
 	}
 
-	// Try #5: still not found, ask for it
+	// Try #7: still not found, ask for it
 	if s.Token == "" {
 		s.Token, err = prompt.New().Ask("Unlock Vault's token:").
 			Input("", input.WithEchoMode(input.EchoPassword))
@@ -324,6 +389,26 @@ func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
 		tokenFile = VaultTokenFileDefault
 	}
 
+	appRoleIdEnv := ptfCfg.Secrets.AppRoleIdEnv
+	if appRoleIdEnv == "" {
+		appRoleIdEnv = VaultAppRoleIdEnvDefault
+	}
+
+	appRoleIdFile := ptfCfg.Secrets.AppRoleIdFile
+	if appRoleIdFile == "" {
+		appRoleIdFile = VaultAppRoleIdFileDefault
+	}
+
+	appRoleSecretEnv := ptfCfg.Secrets.AppRoleSecretEnv
+	if appRoleSecretEnv == "" {
+		appRoleSecretEnv = VaultAppRoleSecretEnvDefault
+	}
+
+	appRoleSecretFile := ptfCfg.Secrets.AppRoleSecretFile
+	if appRoleSecretFile == "" {
+		appRoleSecretFile = VaultAppRoleSecretFileDefault
+	}
+
 	usernameEnv := ptfCfg.Secrets.UsernameEnv
 	if usernameEnv == "" {
 		usernameEnv = VaultUsernameEnvDefault
@@ -353,16 +438,20 @@ func NewSecretProviderHCP(ptfCfg *PlatformConfig) (*SecretProviderHCP, error) {
 	}
 
 	return &SecretProviderHCP{
-		ctx:          context.Background(),
-		Client:       client,
-		Mount:        mount,
-		AuthMethod:   authMethod,
-		TokenEnv:     tokenEnv,
-		TokenFile:    tokenFile,
-		UsernameEnv:  usernameEnv,
-		UsernameFile: usernameFile,
-		PasswordEnv:  passwordEnv,
-		PasswordFile: passwordFile,
-		ID:           ptfCfg.Secrets.MasterKeyID,
+		ctx:               context.Background(),
+		Client:            client,
+		Mount:             mount,
+		AuthMethod:        authMethod,
+		TokenEnv:          tokenEnv,
+		TokenFile:         tokenFile,
+		AppRoleIdEnv:      appRoleIdEnv,
+		AppRoleIdFile:     appRoleIdFile,
+		AppRoleSecretEnv:  appRoleSecretEnv,
+		AppRoleSecretFile: appRoleSecretFile,
+		UsernameEnv:       usernameEnv,
+		UsernameFile:      usernameFile,
+		PasswordEnv:       passwordEnv,
+		PasswordFile:      passwordFile,
+		ID:                ptfCfg.Secrets.MasterKeyID,
 	}, nil
 }
