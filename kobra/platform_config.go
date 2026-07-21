@@ -95,15 +95,19 @@ type PlatformConfigSecretsFile struct {
 
 // PlatformConfigSecretsHCP contains Hashicorp Vault secrets-specific configuration
 type PlatformConfigSecretsHCP struct {
-	Endpoint     string `yaml:"endpoint,omitempty"`
-	Mount        string `yaml:"mount,omitempty"`
-	AuthMethod   string `yaml:"auth_method,omitempty"`
-	TokenEnv     string `yaml:"token_env,omitempty"`
-	TokenFile    string `yaml:"token_file,omitempty"`
-	UsernameEnv  string `yaml:"username_env,omitempty"`
-	UsernameFile string `yaml:"username_file,omitempty"`
-	PasswordEnv  string `yaml:"password_env,omitempty"`
-	PasswordFile string `yaml:"password_file,omitempty"`
+	Endpoint          string `yaml:"endpoint,omitempty"`
+	Mount             string `yaml:"mount,omitempty"`
+	AuthMethod        string `yaml:"auth_method,omitempty"`
+	TokenEnv          string `yaml:"token_env,omitempty"`
+	TokenFile         string `yaml:"token_file,omitempty"`
+	AppRoleIdEnv      string `yaml:"app_role_id_env,omitempty"`
+	AppRoleIdFile     string `yaml:"app_rold_id_file,omitempty"`
+	AppRoleSecretEnv  string `yaml:"app_role_secret_env,omitempty"`
+	AppRoleSecretFile string `yaml:"app_role_secret_file,omitempty"`
+	UsernameEnv       string `yaml:"username_env,omitempty"`
+	UsernameFile      string `yaml:"username_file,omitempty"`
+	PasswordEnv       string `yaml:"password_env,omitempty"`
+	PasswordFile      string `yaml:"password_file,omitempty"`
 }
 
 // PlatformConfigToolchain toolchain-specific configuration

@@ -83,6 +83,10 @@ secrets:
     endpoint: string                  # optional, default to "http://127.0.0.1:8200" if unspecified
     mount: string                     # optional, default to "secret" if unspecified
     auth_method: string               # optional, authentication-method if not token-based, accepts 'credentials' (default) and 'ldap'
+    app_role_id_env: string           # optional, default to "VAULT_APPROLE_ROLE_ID" if unspecfied
+    app_rold_id_file: string          # optional, default to "$HOME/.vault-app-role-id" if unspecified
+    app_role_secret_env: string       # optional, default to "VAULT_APPROLE_SECRET_ID" if unspecfied
+    app_role_secret_file: string      # optional, default to "$HOME/.vault-app-role-secret-id" if unspecified
     user_env: string                  # optional, default to "VAULT_USERNAME" if unspecified
     user_file: string                 # optional, default to "$HOME/.vault-username" if unspecified
     password_env: string              # optional, default to "VAULT_PASSWORD" if unspecified
@@ -188,6 +192,8 @@ Kobra will try to authenticate to HCP Vault through the following mechanisms, in
 
 - **VAULT_TOKEN** environment variable existence
 - **$HOME/.vault-token** file existence
+- **VAULT_APPROLE_ROLE_ID** and **VAULT_APPROLE_SECRET_ID** environment variables existence (app role path is meant to be **kobra**)
+- **$HOME/.vault-app-role-id** and **$HOME/.vault-app-role-secret-id** files existence (app role path is meant to be **kobra**)
 - **VAULT_USERNAME** and **VAULT_PASSWORD** environment variables existence
 - **$HOME/.vault-username** and **$HOME/.vault-password** files existence
 - Ask for token through CLI prompt
