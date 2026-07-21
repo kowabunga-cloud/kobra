@@ -18,17 +18,7 @@ This is **IPSctl**, a DevOps deployment swiss-army knife utility. It provides a 
 
 # Installation
 
-## Ubuntu Linux
-
-Register [Kowabunga APT repository](https://packages.kowabunga.cloud/) and then simply:
-
-```sh
-$ sudo apt-get install ipsctl
-```
-
-## macOS
-
-macOS can install **IPSctl** through [Homebrew](https://brew.sh/). Simply do:
+**IPSctl** can be installed through through [Homebrew](https://brew.sh/). Simply do:
 
 ```sh
 $ brew tap kowabunga/cloud https://github.com/kowabunga-cloud/homebrew-tap.git

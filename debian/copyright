@@ -1,6 +1,0 @@
-Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Source: https://github.com/kowabunga-cloud/ipsctl
-Upstream-Name: IPSctl
-Upstream-Contact: The Kowabunga Project <maintainers@kowabunga.cloud>
-License: Apache-2.0
-Copyright: 2025, The Kowabunga Project

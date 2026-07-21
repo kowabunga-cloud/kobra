@@ -102,10 +102,6 @@ fmt: ; $(info $(M) running go fmt…) @ ## Run go fmt on all source files
 tests: ; $(info $(M) running test suite…) @
 	$Q go test ./... -count=1 -coverprofile=coverage.txt
 
-PHONY: deb
-deb: mod build ; $(info $(M) building debian package…) @
-	$Q ./debian.sh
-
 # This target clean all the generated files
 .PHONY: clean
 clean: ; $(info $(M) cleaning…)	@ ## Cleanup everything
